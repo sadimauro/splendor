@@ -1,0 +1,62 @@
+class GemType(enum)
+    NONE
+    BLACK
+    BLUE
+    GREEN
+    RED
+    WHITE
+    YELLOW
+
+class DevCardType(GemType)
+
+class DevCard:
+    level: int # 1, 2, or 3
+    type: DevCardType # same as bonus
+    ppoints: int
+    cost: set # Tokens; 2 reds and 1 white, eg.
+
+class DevCardCache:
+    d: dict # DevCardType -> set(DevCard)
+
+class Noble:
+    ppoints: int
+    cost: set # DevCards; 3 green, 3 blue, 3 white, e.g.
+
+class TokenType(GemType)
+
+class Token:
+    type: TokenType
+    desc: str
+    desc_long: str
+    image: bytes
+    __init__(token_type=TokenType.NONE: TokenType)
+    set_type_by_str(type_str)
+    __str__() # "sapphire (blue)"
+    get_image()
+
+class TokenCache:
+    d: dict # TokenType -> count
+    __init__(fill=False: bool, players_count=0: int)
+    fill(players_count: int)
+    empty()
+    
+PLAYERS_COUNT_MAX
+PLAYERS_COUNT_MIN
+
+class Player:
+    name: str
+    score: int
+    tokens: TokenCache
+    dev_cards: DevCardCache
+
+class Game:
+    players: list[Player] # list b/c order of play matters
+    winner: Player
+    round_number: int
+    nobles_remaining: set(Noble)
+    tokens_remaining: TokenCache # type -> # left
+
+    __init__() # set up new game
+    play()
+    
+    
