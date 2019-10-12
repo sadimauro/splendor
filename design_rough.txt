@@ -8,19 +8,60 @@ class GemType(enum)
     YELLOW
 
 class DevCardType(GemType)
+    __str__() -> str # get_desc()
+    get_desc() -> str # e.g. "yellow"
+    get_desc_long() -> str # e.g. "gold"
 
 class DevCard:
     level: int # 1, 2, or 3
     type: DevCardType # same as bonus
     ppoints: int
-    cost: set # Tokens; 2 reds and 1 white, eg.
+    cost: dict # GemType (or TokenType?) -> count
+    __int__(level: int, type: DevCardType, ppoints: int, cost: dict)
+    is_purchasable(dev_card_cache: DevCardCache, token_cache: TokenCache) -> bool
+    __str__() -> str
+    get_str() -> str # __str__()
+    get_image() -> bytes
 
 class DevCardCache:
     d: dict # DevCardType -> set(DevCard)
+    __init__() # create empty Cache
+    add(dev_card: DevCard)
+    remove(dev_card: DevCard) -> None # remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.
+    calc_ppoints() -> int # calc ppoints across this cache
+    calc_discount(dev_card_type: DevCardType) -> int # return current discount for DevCardType arg
+    __str__() -> str
+    get_str() -> str # __str__()
+    get_image() -> bytes
+
+class DevCardDeck: # a set of all the dev cards of one level; for storing Game decks
+    level: int
+    l: list
+    __init__(level: int, s: set) # load all of this level's cards
+    get_level() -> int
+    get_list() -> List
+    shuffle() -> None
+    deal(number=1: int) -> DevCard # pop DevCard from list
+    remove(dev_card: DevCard) -> None # remove dev_card, or raise exc if dne
+    remove(idx: int) -> None # remove dev_card at index idx, or raise exc if oob
+    is_empty()
+    count()
+    __str__() -> str
+    get_str() -> str # __str__()
+    get_image() -> bytes
+
+DEV_CARDS_DECK = [set(), set(), set()] # to fill in with actual cards
 
 class Noble:
     ppoints: int
-    cost: set # DevCards; 3 green, 3 blue, 3 white, e.g.
+    cost: dict # GemType (or DevCardType?) -> count
+    image: bytes
+    __init__(ppoints: int, cost: dict, image=None: bytes)
+    __str__() -> str
+    get_str() -> str # __str__()
+    get_image() -> bytes
+
+NOBLES_DECK = set() # to fill in with actual noble cards
 
 class TokenType(GemType)
 
@@ -32,7 +73,7 @@ class Token:
     __init__(token_type=TokenType.NONE: TokenType)
     set_type_by_str(type_str)
     __str__() # "sapphire (blue)"
-    get_image()
+    get_image() -> bytes
 
 class TokenCache:
     d: dict # TokenType -> count
@@ -48,6 +89,8 @@ class Player:
     score: int
     tokens: TokenCache
     dev_cards: DevCardCache
+    reserve: DevCardCache
+    __init__(name: str)
 
 class Game:
     players: list[Player] # list b/c order of play matters
@@ -55,8 +98,8 @@ class Game:
     round_number: int
     nobles_remaining: set(Noble)
     tokens_remaining: TokenCache # type -> # left
-
-    __init__() # set up new game
+    __init__(players_count: int) # set up new game
+    add_player(player: Player)
     play()
     
     
