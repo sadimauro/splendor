@@ -1,16 +1,21 @@
-class GemType(enum)
-    NONE
-    BLACK
-    BLUE
-    GREEN
-    RED
-    WHITE
-    YELLOW
+from enum import Enum
 
-class DevCardType(GemType)
+class GemTypeEnum(Enum)
+    NONE = 0
+    BLACK = 1
+    BLUE = 2
+    GREEN = 3
+    RED = 4
+    WHITE = 5
+    YELLOW = 10
+
+class GemType(GemTypeEnum)
+    __init__(enum_val: int)
     __str__() -> str # get_desc()
     get_desc() -> str # e.g. "yellow"
     get_desc_long() -> str # e.g. "gold"
+
+class DevCardType(GemType)
 
 class DevCard:
     level: int # 1, 2, or 3
@@ -34,6 +39,18 @@ class DevCardCache:
     get_str() -> str # __str__()
     get_image() -> bytes
 
+DEV_CARD_RESERVE_COUNT_MAX = 3
+
+class DevCardReserve:
+    s: set
+    __init__()
+    add(dev_card: DevCard)
+    remove(dev_card: DevCard) -> None # remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.
+    is_max() -> bool
+    can_action_reserve() -> bool
+    __str__() -> str
+    get_str() -> str # __str__()
+
 class DevCardDeck: # a set of all the dev cards of one level; for storing Game decks
     level: int
     l: list
@@ -47,10 +64,11 @@ class DevCardDeck: # a set of all the dev cards of one level; for storing Game d
     is_empty()
     count()
     __str__() -> str
-    get_str() -> str # __str__()
     get_image() -> bytes
 
-DEV_CARDS_DECK = [set(), set(), set()] # to fill in with actual cards
+# TODO - how to represent four showing cards per deck
+
+DEV_CARD_DECKS = [set(), set(), set()] # to fill in with actual cards
 
 class Noble:
     ppoints: int
@@ -58,10 +76,14 @@ class Noble:
     image: bytes
     __init__(ppoints: int, cost: dict, image=None: bytes)
     __str__() -> str
-    get_str() -> str # __str__()
     get_image() -> bytes
 
-NOBLES_DECK = set() # to fill in with actual noble cards
+class NoblesInPlay:
+    s: Set[Noble]
+    __init__(players_count: int)
+    __str__() -> str
+
+NOBLES_DECK = set(...) # to fill in with actual noble cards
 
 class TokenType(GemType)
 
@@ -77,27 +99,71 @@ class Token:
 
 class TokenCache:
     d: dict # TokenType -> count
-    __init__(fill=False: bool, players_count=0: int)
-    fill(players_count: int)
-    empty()
-    
-PLAYERS_COUNT_MAX
-PLAYERS_COUNT_MIN
+    __init__()
+    fill(players_count: int) -> None # for use by __init__()
+    empty() -> None
+    add(token_type: TokenType) -> None
+    remove(token_type: TokenType) -> None
+    count() -> int
+    count_type(token_type: TokenType) -> int
+    is_type_empty(token_type: TokenType) -> bool
+    can_action_take_three_gems(gem_types_set: Set(3)) -> bool
+    can_action_take_two_gems(gem_type: GemType) -> bool
+
+TOKEN_PLAYER_CACHE_MAX = 10
+
+class TokenPlayerCache(TokenCache)
+    __init__()
+    is_max() -> bool
+    is_over_max() -> bool
+
+# players count -> tokens count per type
+TOKEN_COUNT_MAP = {2: 4, 3: 6, 4: 7}
+
+class TokenGameCache(TokenCache)
+    __init__(players_count: int)
+
+class PlayerState:
+    token_cache: TokenCache
+    dev_card_cache: DevCardCache
+    dev_card_reserve: DevCardReserve
+    __init__(token_cache: TokenCache, dev_card_cache: DevCardCache, dev_card_reserve: DevCardReserve)
+    get_token_cache() -> TokenCache
+    get_dev_card_cache() -> DevCardCache
+    get_dev_card_reserve() -> DevCardReserve
+    calc_score() -> int
+    is_winning_state() -> bool
+    __str__() -> str
+
+class PlayerStateHistory:
+    l: List[PlayerState]
+    current_state_idx: int
+    __init__()
+    __str__() # needed?
+    get_current_state() -> PlayerState
+    revert(idx: int) -> None # revert history to state at idx; remove newer states
 
 class Player:
     name: str
-    score: int
-    tokens: TokenCache
-    dev_cards: DevCardCache
-    reserve: DevCardCache
-    __init__(name: str)
+    player_state_history: PlayerStateHistory
+    __init__(name=None: str) # if name=None, make a random one
+    get_name() -> str
+    get_player_state_history() -> PlayerStateHistory
+    calc_score() -> int # call PlayerState.calc_score()
+    action_take_three_gems() -> None # analyze current state; if applicable, create new state
+    action_take_two_gems() -> None
+    action_reserve() -> None
+    action_purchase() -> None
+
+PLAYERS_COUNT_MAX = 4
+PLAYERS_COUNT_MIN = 2
 
 class Game:
     players: list[Player] # list b/c order of play matters
     winner: Player
     round_number: int
-    nobles_remaining: set(Noble)
-    tokens_remaining: TokenCache # type -> # left
+    nobles_in_play: NoblesInPlay
+    token_game_cache: TokenGameCache    
     __init__(players_count: int) # set up new game
     add_player(player: Player)
     play()
