@@ -32,9 +32,9 @@ class DevCardCache:
     d: dict # DevCardType -> set(DevCard)
     __init__() # create empty Cache
     add(dev_card: DevCard)
-    remove(dev_card: DevCard) -> None # remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.
+    remove(dev_card: DevCard) -> None # remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.                                                    
     calc_ppoints() -> int # calc ppoints across this cache
-    calc_discount(dev_card_type: DevCardType) -> int # return current discount for DevCardType arg
+    calc_discount(dev_card_type: DevCardType) -> int # return current discount for DevCardType arg                                                                               
     __str__() -> str
     get_str() -> str # __str__()
     get_image() -> bytes
@@ -53,20 +53,21 @@ class DevCardReserve:
 
 class DevCardDeck: # a set of all the dev cards of one level; for storing Game decks
     level: int
-    l: list
+    l: list # indices 0..3 are the face-up cards; 4..n are the face-down, where 4 is the top-most
     __init__(level: int, s: set) # load all of this level's cards
     get_level() -> int
     get_list() -> List
+    get_facing() -> List[4] # return cards at indices 0..3, which are the facing ones
     shuffle() -> None
-    deal(number=1: int) -> DevCard # pop DevCard from list
-    remove(dev_card: DevCard) -> None # remove dev_card, or raise exc if dne
-    remove(idx: int) -> None # remove dev_card at index idx, or raise exc if oob
+    pop_by_idx(idx: int) -> DevCard # remove DevCard at index idx and return it, or raise exc if oob
+    pop_hidden_card() -> DevCard # remove DevCard at index 4, which is the top of the deck, and return it
     is_empty()
     count()
     __str__() -> str
     get_image() -> bytes
 
-# TODO - how to represent four showing cards per deck
+class DevCardDecks:
+    l: list # indices 0..2 are decks #1..3
 
 DEV_CARD_DECKS = [set(), set(), set()] # to fill in with actual cards
 
@@ -123,49 +124,3 @@ TOKEN_COUNT_MAP = {2: 4, 3: 6, 4: 7}
 class TokenGameCache(TokenCache)
     __init__(players_count: int)
 
-class PlayerState:
-    token_cache: TokenCache
-    dev_card_cache: DevCardCache
-    dev_card_reserve: DevCardReserve
-    __init__(token_cache: TokenCache, dev_card_cache: DevCardCache, dev_card_reserve: DevCardReserve)
-    get_token_cache() -> TokenCache
-    get_dev_card_cache() -> DevCardCache
-    get_dev_card_reserve() -> DevCardReserve
-    calc_score() -> int
-    is_winning_state() -> bool
-    __str__() -> str
-
-class PlayerStateHistory:
-    l: List[PlayerState]
-    current_state_idx: int
-    __init__()
-    __str__() # needed?
-    get_current_state() -> PlayerState
-    revert(idx: int) -> None # revert history to state at idx; remove newer states
-
-class Player:
-    name: str
-    player_state_history: PlayerStateHistory
-    __init__(name=None: str) # if name=None, make a random one
-    get_name() -> str
-    get_player_state_history() -> PlayerStateHistory
-    calc_score() -> int # call PlayerState.calc_score()
-    action_take_three_gems() -> None # analyze current state; if applicable, create new state
-    action_take_two_gems() -> None
-    action_reserve() -> None
-    action_purchase() -> None
-
-PLAYERS_COUNT_MAX = 4
-PLAYERS_COUNT_MIN = 2
-
-class Game:
-    players: list[Player] # list b/c order of play matters
-    winner: Player
-    round_number: int
-    nobles_in_play: NoblesInPlay
-    token_game_cache: TokenGameCache    
-    __init__(players_count: int) # set up new game
-    add_player(player: Player)
-    play()
-    
-    
