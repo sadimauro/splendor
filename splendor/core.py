@@ -2,57 +2,50 @@
 """
 
 from enum import Enum
-
-class GemTypeEnum(Enum):
-    NONE = 0
-    BLACK = 1
-    BLUE = 2
-    GREEN = 3
-    RED = 4
-    WHITE = 5
-    YELLOW = 10
+from typing import List, Dict, Set
 
 GEM_TYPE_STR_DICT = {
-        GemTypeEnum.NONE: ("none", "none"),
-        GemTypeEnum.BLACK: ("black", "onyx"),
-        GemTypeEnum.BLUE: ("blue", "sapphire"),
-        GemTypeEnum.GREEN: ("green", "emerald"),
-        GemTypeEnum.RED: ("red", "ruby"),
-        GemTypeEnum.WHITE: ("white", "diamond"),
-        GemTypeEnum.YELLOW: ("yellow", "gold")
+        "black": "onyx",
+        "blue": "sapphire",
+        "green": "emerald",
+        "red": "ruby",
+        "white": "diamond",
+        "yellow": "gold",
         }
 
 class GemType:
     """
-    >>> a = GemType(GemTypeEnum.BLACK)
+    >>> a = GemType("black")
     >>> a.get_desc()
     'black'
     >>> a.get_desc_long()
     'black (onyx)'
     """
 
-    t: GemTypeEnum
+    t: str
     
     def __init__(
             self,
-            enum_val: GemTypeEnum,
+            t: str,
             ) -> None:
-        self.t = enum_val
+        self.t = t
     
     def __str__(self) -> str:
         return self.get_desc()
     
     def get_desc(self) -> str:
-        return f"{GEM_TYPE_STR_DICT[self.t][0]}"
+        return f"{self.t}"
     
     def get_desc_long(self) -> str:
-        return f"{GEM_TYPE_STR_DICT[self.t][0]} " + \
-                f"({GEM_TYPE_STR_DICT[self.t][1]})"
+        retstr = ""
+        retstr += f"{self.t} "
+        retstr += f"({GEM_TYPE_STR_DICT.get(self.t)})"
+        return retstr
 
 
 class DevCardType(GemType):
     """
-    >>> a = DevCardType(GemTypeEnum.BLACK)
+    >>> a = DevCardType("black")
     >>> a.get_desc()
     'black'
     >>> a.get_desc_long()
@@ -62,21 +55,69 @@ class DevCardType(GemType):
 
 class DevCard:
     """
-    >>> a = DevCard(level=1, t=
+    >>> a = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> a.__str__()
+    "l1p2black/{'blue': 2, 'red': 1}"
+    """
+    
     level: int # 1, 2, or 3
-    type: DevCardType # same as bonus
-#    ppoints: int
-#    cost: dict # GemType (or TokenType?) -> count
-#    __int__(level: int, type: DevCardType, ppoints: int, cost: dict)
-#    is_purchasable(dev_card_cache: DevCardCache, token_cache: TokenCache) -> bool
-#    __str__() -> str
-#    get_str() -> str # __str__()
-#    get_image() -> bytes
+    t: DevCardType # also bonus
+    ppoints: int
+    cost: Dict[str, int] # str -> count
+    def __init__(
+            self,
+            level: int, 
+            t: DevCardType, 
+            ppoints: int, 
+            cost: Dict[str, int],
+            ):
+        self.level = level
+        self.t = t
+        self.ppoints = ppoints
+        self.cost = cost
 
-#class DevCardCache:
-#    d: dict # DevCardType -> set(DevCard)
-#    __init__() # create empty Cache
-#    add(dev_card: DevCard)
+    #def is_purchasable(dev_card_cache: DevCardCache, token_player_cache: TokenPlayerCache) -> bool:
+    #    pass
+
+    def get_cost_str(self) -> str:
+        return self.cost.__str__()
+
+    def __str__(self) -> str:
+        return f"l{self.level}p{self.ppoints}{self.t.__str__()}/{self.get_cost_str()}"
+
+    #def get_image(self) -> bytes:
+    #    pass
+
+class DevCardCache:
+    """
+    >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> dc2 = DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
+    >>> dc3 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
+    >>> a = DevCardCache()
+    >>> a.__str__()
+    ""
+    >>> a.add(dc1)
+    >>> a.__str__()
+    "Dev cards on hand: {'black': 1}"
+    >>> a.add(dc2)
+    >>> a.add(dc3)
+    >>> a.__str__()
+    "Dev cards on hand: {'black': 2, 'blue': 1}"
+    """
+    d: Dict[DevCardType, set(DevCard)]
+
+    def __init__(self):
+        self.d = {}
+
+    def add(
+            self,
+            dev_card: DevCard,
+            ) -> None:
+        if not self.d.get(dev_card.t):
+            self.d[dev_card.t] = set()
+        self.d[dev_card.t].add(dev_card)
+        return
+
 #    remove(dev_card: DevCard) -> None # remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.                                                    
 #    calc_ppoints() -> int # calc ppoints across this cache
 #    calc_discount(dev_card_type: DevCardType) -> int # return current discount for DevCardType arg                                                                               
