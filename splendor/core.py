@@ -104,7 +104,7 @@ class DevCardCache:
     >>> a.__str__()
     "Dev cards on hand: {'black': 2, 'blue': 1}"
     """
-    d: Dict[DevCardType, set(DevCard)]
+    d: Dict[DevCardType, Set[DevCard]]
 
     def __init__(self):
         self.d = {}
