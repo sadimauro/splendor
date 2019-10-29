@@ -232,28 +232,156 @@ class DevCardCache:
 
 #    get_image() -> bytes
 
-#DEV_CARD_RESERVE_COUNT_MAX = 3
+DEV_CARD_RESERVE_COUNT_MAX = 3
 
-#class DevCardReserve:
-#    s: set
-#    __init__()
-#    add(dev_card: DevCard)
-#    remove(dev_card: DevCard) -> None # remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.
-#    is_max() -> bool
-#    can_action_reserve() -> bool
-#    __str__() -> str
-#    get_str() -> str # __str__()
+class DevCardReserve:
+    """
+    The reserve of development cards held by a player.
+    
+    >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> dc2 = DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
+    >>> dc3 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
 
-#class DevCardDeck: # a set of all the dev cards of one level; for storing Game decks
+    >>> a = DevCardReserve()
+    >>> a.add(dc1)
+    >>> a.count()
+    1
+    >>> a.__str__()
+    "Dev cards in reserve (1):\\nl1p2black/{'blue': 2, 'red': 1}"
+    >>> a.add(dc2)
+    >>> a.count()
+    2
+    >>> a.is_max()
+    False
+    >>> a.can_action_reserve()
+    True
+
+    >>> a.add(dc3)
+    >>> a.count()
+    3
+    >>> a.is_max()
+    True
+    >>> a.can_action_reserve()
+    False
+
+    >>> a.add(dc4)
+    Traceback (most recent call last):
+    Exception: cannot add card to DevCardReserve: at max
+    >>> a.count()
+    3
+
+    >>> a.remove(dc3)
+    >>> a.count()
+    2
+    >>> a.remove(dc4)
+    Traceback (most recent call last):
+    Exception: cannot remove card from DevCardReserve: not found
+    >>> a.count()
+    2
+    """
+
+    s: set
+
+    def __init__(self, s: Set[DevCard] = set()) -> None:
+        self.s = s
+
+    def add(self, dev_card: DevCard) -> None:
+        if self.is_max():
+            raise Exception("cannot add card to DevCardReserve: at max")
+        self.s.add(dev_card)
+        return
+
+    def remove(self, dev_card: DevCard) -> None:
+        """
+        Remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.
+        """
+        try:
+            self.s.remove(dev_card)
+        except KeyError:
+            raise Exception("cannot remove card from DevCardReserve: not found")
+        return
+
+    def count(self):
+        return len(self.s)
+
+    def is_max(self) -> bool:
+        return len(self.s) >= DEV_CARD_RESERVE_COUNT_MAX
+
+    def can_action_reserve(self) -> bool:
+        return not self.is_max()
+
+    def __str__(self) -> str:
+        ret_str = ""
+        ret_str += "Dev cards in reserve "
+        ret_str += "(" + str(len(self.s)) + "):\n"
+
+        ret_list = []
+        for entry in self.s:
+            ret_list.append(entry.__str__())
+        ret_str += "\n".join(ret_list)
+
+        return ret_str
+
+
+class DevCardDeck: 
+    """
+    A list of all the dev cards of one level, representing one of the three game decks.
+
+    >>> dc0 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
+    >>> dc2 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc3 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc5 = DevCard(level=1, t=DevCardType("red"), ppoints=0, cost={"red": 1, "green": 3})
+    >>> dc6 = DevCard(level=1, t=DevCardType("white"), ppoints=0, cost={"white": 1, "green": 3})
+
+    >>> a = DevCardDeck(1, [dc0, dc1, dc2, dc3, dc4, dc5, dc6])
+    >>> a.get_level()
+    1
+    >>> len(a.get_list())
+    7
+    >>> a.count()
+    7
+    >>> a.get_facing() == [dc0, dc1, dc2, dc3]
+    True
+    >>> a.is_empty()
+    False
+    >>> a.is_hidden_empty()
+    False
+
+    >>> a.pop_by_idx(2) == dc2
+    >>> a.count()
+    6
+    >>> a.get_facing() == [dc0, dc1, dc3, dc4]
+    True
+
+    >>> a.pop_hidden_card() == dc5
+    >>> a.count()
+    5
+    >>> a.is_hidden_empty()
+    False
+    >>> a.get_facing() == [dc0, dc1, dc3, dc4]
+    True
+
+    >>> a.pop_hidden_card() == dc6
+    True
+    >>> a.is_hidden_empty()
+    True
+    >>> a.is_empty()
+    False
+    """
+
 #    level: int
 #    l: list # indices 0..3 are the face-up cards; 4..n are the face-down, where 4 is the top-most
-#    __init__(level: int, s: set) # load all of this level's cards
+#    __init__(level: int, l: List[DevCard]) # load all of this level's cards
 #    get_level() -> int
 #    get_list() -> List
 #    get_facing() -> List[4] # return cards at indices 0..3, which are the facing ones
 #    shuffle() -> None
 #    pop_by_idx(idx: int) -> DevCard # remove DevCard at index idx and return it, or raise exc if oob
 #    pop_hidden_card() -> DevCard # remove DevCard at index 4, which is the top of the deck, and return it
+#    is_hidden_empty()
 #    is_empty()
 #    count()
 #    __str__() -> str
