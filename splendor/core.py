@@ -4,6 +4,7 @@
 from enum import Enum
 import json
 import logging
+import random
 from typing import List, Dict, Set
 
 logging.basicConfig(level=logging.INFO)
@@ -323,6 +324,7 @@ class DevCardReserve:
 
         return ret_str
 
+UPFACING_CARDS_LEN = 4
 
 class DevCardDeck: 
     """
@@ -351,12 +353,14 @@ class DevCardDeck:
     False
 
     >>> a.pop_by_idx(2) == dc2
+    True
     >>> a.count()
     6
     >>> a.get_facing() == [dc0, dc1, dc3, dc4]
     True
 
     >>> a.pop_hidden_card() == dc5
+    True
     >>> a.count()
     5
     >>> a.is_hidden_empty()
@@ -372,19 +376,75 @@ class DevCardDeck:
     False
     """
 
-#    level: int
-#    l: list # indices 0..3 are the face-up cards; 4..n are the face-down, where 4 is the top-most
-#    __init__(level: int, l: List[DevCard]) # load all of this level's cards
-#    get_level() -> int
-#    get_list() -> List
-#    get_facing() -> List[4] # return cards at indices 0..3, which are the facing ones
-#    shuffle() -> None
-#    pop_by_idx(idx: int) -> DevCard # remove DevCard at index idx and return it, or raise exc if oob
-#    pop_hidden_card() -> DevCard # remove DevCard at index 4, which is the top of the deck, and return it
-#    is_hidden_empty()
-#    is_empty()
-#    count()
-#    __str__() -> str
+    level: int
+    l: list # indices 0..3 are the face-up cards; 4..n are the face-down, where 4 is the top-most
+    def __init__(self, level: int, l: List[DevCard] = None) -> None:
+        """
+        Load all of this level's cards
+        """
+        self.level = level
+        self.l = l
+
+    def get_level(self) -> int:
+        return self.level
+
+    def get_list(self) -> List[DevCard]:
+        return self.l
+
+    def get_facing(self) -> List[DevCard]:
+        """
+        Return cards at indices 0..3, which are the facing ones, as a List
+        """
+        if len(self.l) < UPFACING_CARDS_LEN:
+            raise Exception("not enough cards remain to get facing ones")
+        return self.l[0:UPFACING_CARDS_LEN]
+
+    def shuffle(self) -> None:
+        random.shuffle(self.l)
+        return
+
+    def pop_by_idx(self, idx: int) -> DevCard:
+        """
+        Remove DevCard at index idx and return it, or raise exc if oob
+        """
+        try:
+            return self.l.pop(idx)
+        except IndexError:
+            raise
+
+    def pop_hidden_card(self) -> DevCard:
+        """
+        Remove DevCard at index 4, which is the top of the deck, and return it
+        """
+        if len(self.l) < UPFACING_CARDS_LEN + 1:
+            raise Exception("not enough cards remain to get hidden one")
+        return self.l.pop(UPFACING_CARDS_LEN)
+
+    def is_hidden_empty(self) -> bool:
+        if len(self.l) < UPFACING_CARDS_LEN + 1:
+            return True
+        return False
+
+    def is_empty(self) -> bool:
+        if len(self.l) <= 0:
+            return True
+        return False
+
+    def count(self) -> int:
+        return len(self.l)
+
+    def __str__(self) -> str:
+        ret_str = ""
+        ret_str += f"Dev cards in deck "
+        ret_str += f"(level {self.level}, count {len(self.l)}):\n"
+
+        ret_list = []
+        for card in self.l:
+            ret_list.append(card.__str__())
+        ret_str += "\n".join(ret_list)
+
+        return ret_str
+
 #    get_image() -> bytes
 
 #class DevCardDecks:
