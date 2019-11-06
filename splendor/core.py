@@ -452,44 +452,156 @@ class DevCardDeck:
 
 #DEV_CARD_DECKS = [set(), set(), set()] # to fill in with actual cards
 
-#class Noble:
-#    ppoints: int
-#    cost: dict # GemType (or DevCardType?) -> count
-#    image: bytes
-#    __init__(ppoints: int, cost: dict, image=None: bytes)
-#    __str__() -> str
+class Noble:
+    """
+    A Noble.
+
+    >>> a = Noble(3, {'black': 4, 'white': 4})
+    >>> a.get_ppoints()
+    3
+    >>> a.get_cost() == {'black': 4, 'white': 4}
+    True
+    """
+    ppoints: int
+    cost: Dict[DevCardType, int]
+    image: bytes
+
+    def __init__(self, ppoints: int, cost: Dict[DevCardType, int], image: bytes=None):
+        self.ppoints = ppoints
+        self.cost = cost
+        self.image = image
+
+    def get_ppoints(self) -> int:
+        return self.ppoints
+
+    def get_cost(self) -> Dict[DevCardType, int]:
+        return self.cost
+
+    def get_cost_str(self) -> str:
+        return self.cost.__str__()
+
+    def __str__(self) -> str:
+        return f"p{self.ppoints}/{self.get_cost_str()}"
+
 #    get_image() -> bytes
 
-#class NoblesInPlay:
-#    s: Set[Noble]
-#    __init__(players_count: int)
-#    __str__() -> str
+class NoblesInPlay:
+    """ 
+    The set of face-up Nobles.
+
+    >>> n1 = Noble(3, {'black': 4, 'white': 4})
+    >>> n2 = Noble(3, {'black': 3, 'white': 3, 'blue': 3})
+    >>> n3 = Noble(3, {'black': 4, 'green': 4})
+    >>> a = NoblesInPlay(set((n1, n2, n3)))
+    >>> a.count()
+    3
+    """
+    s: Set[Noble]
+
+    def __init__(self, s: Set[Noble]=set()) -> None:
+        self.s = s
+
+    def count(self) -> int:
+        return len(self.s)
+
+    def __str__(self) -> str:
+        retstr = ""
+        retstr += f"Nobles in play ({self.count()}):"
+        for noble in self.s:
+            retstr += noble.__str__() + "\n"
+        return retstr
 
 #NOBLES_DECK = set(...) # to fill in with actual noble cards
 
-#class TokenType(GemType)
+class TokenType(GemType):
+    """
+    Hashable class representing the type of a token.  Inherits from GemType.
 
-#class Token:
-#    type: TokenType
-#    desc: str
-#    desc_long: str
-#    image: bytes
-#    __init__(token_type=TokenType.NONE: TokenType)
-#    set_type_by_str(type_str)
-#    __str__() # "sapphire (blue)"
-#    get_image() -> bytes
+    >>> a = TokenType("black")
+    >>> a.get_desc()
+    'black'
+    >>> a.get_desc_long()
+    'black (onyx)'
+    
+    >>> b = TokenType("black")
+    >>> c = TokenType("blue")
+    >>> a == b
+    True
+    >>> a == c
+    False
+    """
+    pass
 
-#class TokenCache:
-#    d: dict # TokenType -> count
-#    __init__()
-#    fill(players_count: int) -> None # for use by __init__()
-#    empty() -> None
-#    add(token_type: TokenType) -> None
-#    remove(token_type: TokenType) -> None
-#    count() -> int
-#    count_type(token_type: TokenType) -> int
-#    is_type_empty(token_type: TokenType) -> bool
-#    can_action_take_three_gems(gem_types_set: Set(3)) -> bool
+class Token:
+    """
+    A token.
+
+    >>> a = Token(TokenType("black"))
+    >>> a.__str__()
+    'black'
+    """
+    t: TokenType
+    image: bytes
+
+    def __init__(self, token_type: TokenType, image: bytes=None) -> None:
+        self.t = token_type
+        self.image = image
+
+    def __str__(self) -> str:
+        return self.t.__str__()
+
+        #    get_image() -> bytes
+
+class TokenCache:
+    """
+    The set of Tokens currently held by a player (PlayerTokenCache) or game (GameTokenCache).
+
+    >>> t0 = Token(TokenType("black"))
+    >>> t1 = Token(TokenType("black"))
+    >>> t2 = Token(TokenType("yellow"))
+    >>> t3 = Token(TokenType("blue"))
+    >>> a = TokenCache(set((t0, t1, t2, t3)))
+
+    """
+    d: Dict[TokenType, int]
+
+    def __init__(self, s: Set[Token]=set()) -> None:
+        self.d = {}
+        for item in s:
+            self.d[item.t] = self.d.setdefault(item.t, 0) + 1
+
+    def empty(self) -> None:
+        self.d = {}
+
+    def add(self, token_type: TokenType) -> None:
+        self.d[token_type] = self.d.setdefault(token_type, 0) + 1
+
+    def remove(self, token_type: TokenType) -> Token:
+        if self.d.get(token_type) and self.d.get(token_type) > 0:
+            self.d[token_type] -= 1
+            return Token(token_type)
+        else:
+            raise Exception(f"token type {token_type} not found in token cache")
+
+    def count(self) -> int:
+        count = 0
+        for key in self.d.keys():
+            count += self.d[k]
+        return count
+
+    def count_type(self, token_type: TokenType) -> int:
+        count = self.d.get(token_type)
+        if count:
+            return count
+        else:
+            raise Exception(f"token type {token_type} does not exist in this token cache")
+
+    def is_type_empty(self, token_type: TokenType) -> bool:
+        if not self.d.get(token_type) or self.d.get(token_type) < 0:
+            return True
+        return False
+
+    def can_action_take_three_gems(gem_types_set: Set(3)) -> bool
 #    can_action_take_two_gems(gem_type: GemType) -> bool
 
 #TOKEN_PLAYER_CACHE_MAX = 10
@@ -504,6 +616,7 @@ class DevCardDeck:
 
 #class TokenGameCache(TokenCache)
 #    __init__(players_count: int)
+#    fill(players_count: int) -> None # for use by __init__()
 
 if __name__ == "__main__":
     import doctest
