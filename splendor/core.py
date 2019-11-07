@@ -561,7 +561,39 @@ class TokenCache:
     >>> t2 = Token(TokenType("yellow"))
     >>> t3 = Token(TokenType("blue"))
     >>> a = TokenCache(set((t0, t1, t2, t3)))
+    
+    >>> a.count()
+    4
+    >>> a.count_type(TokenType("black"))
+    2
+    >>> a.count_type(TokenType("red"))
+    0
+    >>> a.is_type_empty(TokenType("black"))
+    False
+    >>> a.is_type_empty(TokenType("red"))
+    True
 
+    >>> t4 = Token(TokenType("black"))
+    >>> t5 = Token(TokenType("red"))
+    >>> a.add(t4)
+    >>> a.add(t5)
+    >>> a.count()
+    6
+    >>> a.count_type(TokenType("black"))
+    3
+    >>> a.is_type_empty(TokenType("red"))
+    False
+
+    >>> a.remove(TokenType("yellow"))
+    >>> a.count()
+    5
+    >>> a.count_type(TokenType("yellow"))
+    0
+    >>> a.remove(TokenType("yellow"))
+    Traceback (most recent call last):
+    Exception: token type yellow not found in token cache
+    >>> a.count()
+    5
     """
     d: Dict[TokenType, int]
 
@@ -573,20 +605,20 @@ class TokenCache:
     def empty(self) -> None:
         self.d = {}
 
-    def add(self, token_type: TokenType) -> None:
-        self.d[token_type] = self.d.setdefault(token_type, 0) + 1
+    def add(self, token: Token) -> None:
+        self.d[token.t] = self.d.setdefault(token.t, 0) + 1
 
-    def remove(self, token_type: TokenType) -> Token:
+    def remove(self, token_type: TokenType) -> None:
         if self.d.get(token_type) and self.d.get(token_type) > 0:
             self.d[token_type] -= 1
-            return Token(token_type)
+            return
         else:
             raise Exception(f"token type {token_type} not found in token cache")
 
     def count(self) -> int:
         count = 0
         for key in self.d.keys():
-            count += self.d[k]
+            count += self.d[key]
         return count
 
     def count_type(self, token_type: TokenType) -> int:
@@ -594,29 +626,132 @@ class TokenCache:
         if count:
             return count
         else:
-            raise Exception(f"token type {token_type} does not exist in this token cache")
+            return 0
 
     def is_type_empty(self, token_type: TokenType) -> bool:
         if not self.d.get(token_type) or self.d.get(token_type) < 0:
             return True
         return False
 
-    def can_action_take_three_gems(gem_types_set: Set(3)) -> bool
-#    can_action_take_two_gems(gem_type: GemType) -> bool
+PLAYER_TOKEN_CACHE_MAX = 10
 
-#TOKEN_PLAYER_CACHE_MAX = 10
+class PlayerTokenCache(TokenCache):
+    """
+    The set of tokens currently held by a player.
+    
+    >>> a = PlayerTokenCache()
+    >>> a.count()
+    0
+    >>> a.count_type(TokenType("black"))
+    0
 
-#class TokenPlayerCache(TokenCache)
-#    __init__()
-#    is_max() -> bool
-#    is_over_max() -> bool
+    >>> a.add(Token(TokenType("black")))
+    >>> a.add(Token(TokenType("black")))
+    >>> a.add(Token(TokenType("black")))
+    >>> a.add(Token(TokenType("black")))
+    >>> a.add(Token(TokenType("black")))
+    >>> a.add(Token(TokenType("red")))
+    >>> a.add(Token(TokenType("red")))
+    >>> a.add(Token(TokenType("red")))
+    >>> a.add(Token(TokenType("blue")))
+    >>> a.count()
+    9
+    >>> a.count_type(TokenType("black"))
+    5
+    >>> a.count_type(TokenType("red"))
+    3
+    >>> a.is_type_empty(TokenType("black"))
+    False
+    >>> a.is_type_empty(TokenType("white"))
+    True
+    >>> a.is_max()
+    False
+    >>> a.is_over_max()
+    False
+
+    >>> a.add(Token(TokenType("red")))
+    >>> a.count() == PLAYER_TOKEN_CACHE_MAX
+    True
+    >>> a.is_max()
+    True
+    >>> a.is_over_max()
+    False
+    >>> a.add(Token(TokenType("red")))
+    >>> a.count() == PLAYER_TOKEN_CACHE_MAX + 1
+    True
+    >>> a.is_max()
+    False
+    >>> a.is_over_max()
+    True
+
+    >>> a.remove(TokenType("red"))
+    >>> a.count()
+    10
+    >>> a.count_type(TokenType("red"))
+    4
+    >>> a.remove(TokenType("yellow"))
+    Traceback (most recent call last):
+    Exception: token type yellow not found in token cache
+    >>> a.count()
+    10
+    """
+
+    def is_max(self) -> True:
+        if self.count() == PLAYER_TOKEN_CACHE_MAX:
+            return True
+        return False
+
+    def is_over_max(self) -> True:
+        if self.count() > PLAYER_TOKEN_CACHE_MAX:
+            return True
+        return False
 
 # players count -> tokens count per type
-#TOKEN_COUNT_MAP = {2: 4, 3: 6, 4: 7}
+TOKEN_COUNT_MAP = {2: 4, 3: 6, 4: 7}
 
-#class TokenGameCache(TokenCache)
-#    __init__(players_count: int)
-#    fill(players_count: int) -> None # for use by __init__()
+class GameTokenCache(TokenCache):
+    """
+    The set of tokens available within a game.  The initial counts depend on the number of players.
+    
+    >>> a = GameTokenCache(players_count=2)
+    >>> a.count()
+    29
+    >>> a.count_type(TokenType("black"))
+    4
+    >>> a.count_type(TokenType("yellow"))
+    5
+
+    >>> a.remove(TokenType("red"))
+    >>> a.count_type(TokenType("red"))
+    3
+    >>> a.is_type_empty(TokenType("red"))
+    False
+    >>> a.remove(TokenType("red"))
+    >>> a.remove(TokenType("red"))
+    >>> a.remove(TokenType("red"))
+    >>> a.count_type(TokenType("red"))
+    0
+    >>> a.is_type_empty(TokenType("red"))
+    True
+    >>> a.remove(TokenType("red"))
+    Traceback (most recent call last):
+    Exception: token type yellow not found in token cache
+
+    >>> a.add(Token(TokenType("red")))
+    >>> a.add(Token(TokenType("red")))
+    >>> a.count_type(TokenType("red"))
+    2
+    """
+    def __init__(self, players_count: int) -> None:
+        self.d = {}
+        self.fill(players_count)
+
+    def fill(self, players_count: int) -> None:
+        if players_count == 2:
+            todo
+
+    #def can_action_take_three_tokens(token_types_set: Set[TokenType]) -> bool
+    #def can_action_take_two_tokens(token_types_set: Set[TokenType]) -> bool
 
 if __name__ == "__main__":
     import doctest
