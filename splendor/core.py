@@ -9,7 +9,15 @@ from typing import List, Dict, Set
 
 logging.basicConfig(level=logging.INFO)
 
-GEM_TYPE_STR_DICT = {
+GEM_TYPE_COMMON_STR_DICT = {
+        "black": "onyx",
+        "blue": "sapphire",
+        "green": "emerald",
+        "red": "ruby",
+        "white": "diamond",
+        }
+
+GEM_TYPE_ALL_STR_DICT = {
         "black": "onyx",
         "blue": "sapphire",
         "green": "emerald",
@@ -59,7 +67,7 @@ class GemType:
     def get_desc_long(self) -> str:
         retstr = ""
         retstr += f"{self.t} "
-        retstr += f"({GEM_TYPE_STR_DICT.get(self.t)})"
+        retstr += f"({GEM_TYPE_ALL_STR_DICT.get(self.t)})"
         return retstr
 
 
@@ -81,6 +89,7 @@ class DevCardType(GemType):
     False
     """
     pass
+
 
 class DevCard:
     """
@@ -715,7 +724,7 @@ class GameTokenCache(TokenCache):
     
     >>> a = GameTokenCache(players_count=2)
     >>> a.count()
-    29
+    25
     >>> a.count_type(TokenType("black"))
     4
     >>> a.count_type(TokenType("yellow"))
@@ -735,24 +744,24 @@ class GameTokenCache(TokenCache):
     True
     >>> a.remove(TokenType("red"))
     Traceback (most recent call last):
-    Exception: token type yellow not found in token cache
+    Exception: token type red not found in token cache
 
     >>> a.add(Token(TokenType("red")))
-    >>> a.add(Token(TokenType("red")))
     >>> a.count_type(TokenType("red"))
-    2
+    1
     """
     def __init__(self, players_count: int) -> None:
         self.d = {}
         self.fill(players_count)
 
     def fill(self, players_count: int) -> None:
-        if players_count == 2:
-            todo
+        if players_count not in TOKEN_COUNT_MAP.keys():
+            raise Exception("invalid players_count")
+        for typ in GEM_TYPE_COMMON_STR_DICT.keys():
+            self.d[TokenType(typ)] = TOKEN_COUNT_MAP[players_count]
+        self.d[TokenType("yellow")] = 5
 
     #def can_action_take_three_tokens(token_types_set: Set[TokenType]) -> bool
     #def can_action_take_two_tokens(token_types_set: Set[TokenType]) -> bool
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+WINNING_SCORE = 15
