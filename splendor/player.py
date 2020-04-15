@@ -2,6 +2,8 @@
 """
 
 from core import DevCard, DevCardCache, DevCardReserve, DevCardType, PlayerTokenCache, Token, TokenType, WINNING_SCORE
+
+from copy import deepcopy
 from enum import Enum
 import json
 import logging
@@ -14,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 class PlayerState:
     """
     The state of a player at some point during a game.
-    
+   
     >>> token_cache = PlayerTokenCache()
     >>> token_cache.add(Token(TokenType("black")))
     >>> token_cache.add(Token(TokenType("black")))
@@ -25,7 +27,6 @@ class PlayerState:
     >>> dev_card_cache.add(DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3}))
     >>> dev_card_reserve = DevCardReserve()
     >>> dev_card_reserve.add(DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3}))
-
     >>> a = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
 
     >>> a.calc_score()
@@ -33,6 +34,10 @@ class PlayerState:
 
     >>> a.is_winning_state()
     False
+
+    >>> b = a.copy()
+    >>> a.calc_score() == b.calc_score()
+    True
 
     """
     token_cache: PlayerTokenCache
@@ -43,6 +48,9 @@ class PlayerState:
         self.token_cache = token_cache
         self.dev_card_cache = dev_card_cache
         self.dev_card_reserve = dev_card_reserve
+
+    def copy(self):
+        return deepcopy(self)
 
     def get_token_cache(self) -> PlayerTokenCache:
         return self.token_cache
@@ -69,6 +77,47 @@ class PlayerState:
 
 
 class PlayerStateHistory:
+    """
+    The ordered list of a player's states.  PlayerState at index 0 is the player's first PlayerState, and subsequent indices are later states.
+
+    >>> token_cache = PlayerTokenCache()
+    >>> token_cache.add(Token(TokenType("black")))
+    >>> token_cache.add(Token(TokenType("black")))
+    >>> token_cache.add(Token(TokenType("red")))
+    >>> dev_card_cache = DevCardCache()
+    >>> dev_card_cache.add(DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1}))
+    >>> dev_card_cache.add(DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3}))
+    >>> dev_card_cache.add(DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3}))
+    >>> dev_card_reserve = DevCardReserve()
+    >>> dev_card_reserve.add(DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3}))
+    >>> state_1 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
+
+    >>> token_cache.add(Token(TokenType("blue")))
+    >>> state_2 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
+    
+    >>> dev_card_reserve.add(DevCard(level=2, t=DevCardType("red"), ppoints=5, cost={"white": 3, "red": 4, "green": 3}))
+    >>> state_3 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
+
+    >>> psh = PlayerStateHistory()
+    >>> psh.get_current_state_idx()
+    0
+    >>> psh.add(state_1)
+    >>> psh.get_current_state_idx()
+    1
+    >>> psh.add(state_2)
+    >>> psh.add(state_3)
+    >>> psh.get_current_state_idx()
+    3
+    >>> psh.get_current_state().get_token_cache()
+    todo
+
+    >>> psh.revert(1)
+    >>> psh.get_current_state_idx()
+    1
+    >>> psh.get_current_state().get_token_cache()
+    todo
+
+    """
     l: List[PlayerState]
     current_state_idx: int
     def __init__(self) -> None:
@@ -77,7 +126,7 @@ class PlayerStateHistory:
     def get_current_state(self) -> PlayerState:
         pass
 
-    def revert(idx: int) -> None: # revert history to state at idx; remove newer states
+    def revert(state_no: int) -> None: # revert history to state at idx; remove newer states
         pass
 
 class Player:

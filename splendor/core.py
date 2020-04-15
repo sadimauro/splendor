@@ -613,7 +613,7 @@ class TokenCache:
         self.d = {}
         for item in s:
             self.d[item.t] = self.d.setdefault(item.t, 0) + 1
-
+    
     def empty(self) -> None:
         self.d = {}
 
