@@ -1,4 +1,5 @@
 """
+core.py - Core splendor classes/functions.  Used heavily by the other splendor modules.
 """
 
 from enum import Enum
@@ -93,6 +94,8 @@ class DevCardType(GemType):
 
 class DevCard:
     """
+    A particular instance of a development card.  Includes level (1, 2, or 3), type, points (>= 0), and cost.
+
     >>> a = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
     >>> a.__str__()
     "l1p2black/{'blue': 2, 'red': 1}"
@@ -246,7 +249,7 @@ DEV_CARD_RESERVE_COUNT_MAX = 3
 
 class DevCardReserve:
     """
-    The reserve of development cards held by a player.
+    The reserve of development cards held by a player, which have yet to be purchased by the player.
     
     >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
     >>> dc2 = DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
