@@ -548,15 +548,15 @@ class Token:
     """
     A token.
 
-    >>> a = Token(TokenType("black"))
+    >>> a = Token("black")
     >>> a.__str__()
     'black'
     """
     t: TokenType
     image: bytes
 
-    def __init__(self, token_type: TokenType, image: bytes=None) -> None:
-        self.t = token_type
+    def __init__(self, token_type_str: str, image: bytes=None) -> None:
+        self.t = TokenType(token_type_str)
         self.image = image
 
     def __str__(self) -> str:
@@ -568,10 +568,10 @@ class TokenCache:
     """
     The set of Tokens currently held by a player (PlayerTokenCache) or game (GameTokenCache).
 
-    >>> t0 = Token(TokenType("black"))
-    >>> t1 = Token(TokenType("black"))
-    >>> t2 = Token(TokenType("yellow"))
-    >>> t3 = Token(TokenType("blue"))
+    >>> t0 = Token("black")
+    >>> t1 = Token("black")
+    >>> t2 = Token("yellow")
+    >>> t3 = Token("blue")
     >>> a = TokenCache(set((t0, t1, t2, t3)))
     
     >>> a.count()
@@ -585,8 +585,8 @@ class TokenCache:
     >>> a.is_type_empty(TokenType("red"))
     True
 
-    >>> t4 = Token(TokenType("black"))
-    >>> t5 = Token(TokenType("red"))
+    >>> t4 = Token("black")
+    >>> t5 = Token("red")
     >>> a.add(t4)
     >>> a.add(t5)
     >>> a.count()
@@ -657,15 +657,15 @@ class PlayerTokenCache(TokenCache):
     >>> a.count_type(TokenType("black"))
     0
 
-    >>> a.add(Token(TokenType("black")))
-    >>> a.add(Token(TokenType("black")))
-    >>> a.add(Token(TokenType("black")))
-    >>> a.add(Token(TokenType("black")))
-    >>> a.add(Token(TokenType("black")))
-    >>> a.add(Token(TokenType("red")))
-    >>> a.add(Token(TokenType("red")))
-    >>> a.add(Token(TokenType("red")))
-    >>> a.add(Token(TokenType("blue")))
+    >>> a.add(Token("black"))
+    >>> a.add(Token("black"))
+    >>> a.add(Token("black"))
+    >>> a.add(Token("black"))
+    >>> a.add(Token("black"))
+    >>> a.add(Token("red"))
+    >>> a.add(Token("red"))
+    >>> a.add(Token("red"))
+    >>> a.add(Token("blue"))
     >>> a.count()
     9
     >>> a.count_type(TokenType("black"))
@@ -681,14 +681,14 @@ class PlayerTokenCache(TokenCache):
     >>> a.is_over_max()
     False
 
-    >>> a.add(Token(TokenType("red")))
+    >>> a.add(Token("red"))
     >>> a.count() == PLAYER_TOKEN_CACHE_MAX
     True
     >>> a.is_max()
     True
     >>> a.is_over_max()
     False
-    >>> a.add(Token(TokenType("red")))
+    >>> a.add(Token("red")))
     >>> a.count() == PLAYER_TOKEN_CACHE_MAX + 1
     True
     >>> a.is_max()
@@ -749,7 +749,7 @@ class GameTokenCache(TokenCache):
     Traceback (most recent call last):
     Exception: token type red not found in token cache
 
-    >>> a.add(Token(TokenType("red")))
+    >>> a.add(Token("red"))
     >>> a.count_type(TokenType("red"))
     1
     """

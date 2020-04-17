@@ -8,6 +8,7 @@ from enum import Enum
 import json
 import logging
 import random
+import string
 from typing import List, Dict, Set
 
 logging.basicConfig(level=logging.INFO)
@@ -54,13 +55,25 @@ class PlayerState:
 
     def get_token_cache(self) -> PlayerTokenCache:
         return self.token_cache
+    
+    def set_token_cache(self, new_token_cache) -> None:
+        self.token_cache = new_token_cache
+        return
 
     def get_dev_card_cache(self) -> DevCardCache:
         return self.dev_card_cache
 
+    def set_dev_card_cache(self, new_dev_card_cache) -> None:
+        self.dev_card_cache = new_dev_card_cache
+        return
+    
     def get_dev_card_reserve(self) -> DevCardReserve:
         return self.dev_card_reserve
 
+    def set_dev_card_reserve(self, new_dev_card_reserve) -> None:
+        self.dev_card_reserve = new_dev_card_reserve
+        return
+    
     def calc_score(self) -> int:
         return self.dev_card_cache.calc_ppoints()
 
@@ -74,6 +87,45 @@ class PlayerState:
         ret += self.dev_card_cache + "\n"
         ret += self.dev_card_reserve + "\n"
         return ret
+
+def clone_playerState_new_token_cache(
+        old_player_state: PlayerState,
+        new_token_cache: PlayerTokenCache
+        ) -> PlayerState:
+    ret = old_player_state.copy()
+    ret.set_token_cache(new_token_cache)
+    return ret
+
+def clone_playerState_new_dev_card_cache(
+        old_player_state: PlayerState,
+        new_dev_card_cache: DevCardCache,
+        ) -> PlayerState:
+    ret = old_player_state.copy()
+    ret.set_dev_card_cache(new_dev_card_cache)
+    return ret
+
+def clone_playerState_new_dev_card_reserve(
+        old_player_state: PlayerState,
+        new_dev_card_reserve: DevCardReserve,
+        ) -> PlayerState:
+    ret = old_player_state.copy()
+    ret.set_dev_card_reserve(new_dev_card_reserve)
+    return ret
+
+def clone_playerState(
+        old_player_state: PlayerState,
+        new_token_cache: PlayerTokenCache=None,
+        new_dev_card_cache: DevCardCache=None,
+        new_dev_card_reserve: DevCardReserve=None,
+        ) -> PlayerState:
+    ret = old_player_state.copy()
+    if new_token_cache:
+        ret.set_token_cache(new_token_cache)
+    if new_dev_card_cache:
+        ret.set_dev_card_cache(new_dev_card_cache)
+    if new_dev_card_reserve:
+        ret.set_dev_card_reserve(new_dev_card_reserve)
+    return ret
 
 
 class PlayerStateHistory:
@@ -99,42 +151,97 @@ class PlayerStateHistory:
     >>> state_3 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
 
     >>> psh = PlayerStateHistory()
-    >>> psh.get_current_state_idx()
+    >>> psh.get_current_state_no()
     0
-    >>> psh.add(state_1)
-    >>> psh.get_current_state_idx()
+    >>> psh.append(state_1)
+    >>> psh.get_current_state_no()
     1
-    >>> psh.add(state_2)
-    >>> psh.add(state_3)
-    >>> psh.get_current_state_idx()
+    >>> psh.append(state_2)
+    >>> psh.append(state_3)
+    >>> psh.get_current_state_no()
     3
-    >>> psh.get_current_state().get_token_cache()
-    todo
+    >>> psh.get_current_state() #doctest: +ELLIPSIS
+    <player.PlayerState object at ...
 
     >>> psh.revert(1)
-    >>> psh.get_current_state_idx()
+    >>> psh.get_current_state_no()
     1
-    >>> psh.get_current_state().get_token_cache()
-    todo
 
     """
     l: List[PlayerState]
-    current_state_idx: int
+
     def __init__(self) -> None:
-        pass
+        self.l = list()
+
+    def append(self, new_state) -> None:
+        self.l.append(new_state)
+        return
 
     def get_current_state(self) -> PlayerState:
-        pass
+        """ Retrieve the current state within this PlayerStateHistory. """
+        if len(self.l) == 0:
+            return None
+        return self.l[len(self.l)-1]
+    
+    def get_current_state_no(self) -> int:
+        """ Return the one-based state number (or zero, if the list is empty)."""
+        return len(self.l)
 
-    def revert(state_no: int) -> None: # revert history to state at idx; remove newer states
-        pass
+    def revert(self, state_no: int) -> None: 
+        """ Revert history to state at state_no, and remove newer states. """
+        if state_no <= 0:
+            raise Exception("state number cannot be negative")
+        if state_no > len(self.l):
+            raise Exception("state number cannot be greater than the current state number")
+        self.l = self.l[0:state_no]
+        return
 
 class Player:
+    """
+    A Splendor player.  Includes the player's name and state history.
+
+    >>> player_a = Player("Joe")
+    >>> player_a.get_name()
+    "Joe"
+
+    >>> token_cache = PlayerTokenCache()
+    >>> token_cache.add(Token(TokenType("black")))
+    >>> token_cache.add(Token(TokenType("black")))
+    >>> token_cache.add(Token(TokenType("red")))
+    >>> dev_card_cache = DevCardCache()
+    >>> dev_card_cache.add(DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1}))
+    >>> dev_card_cache.add(DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3}))
+    >>> dev_card_cache.add(DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3}))
+    >>> dev_card_reserve = DevCardReserve()
+    >>> dev_card_reserve.add(DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3}))
+    >>> state_1 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
+    >>> player_a.append_player_state(state_1)
+
+    >>> player_a.calc_score()
+    3
+
+    >>> token_cache.add(Token(TokenType("blue")))
+    >>> state_2 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
+    >>> dev_card_reserve.add(DevCard(level=2, t=DevCardType("red"), ppoints=5, cost={"white": 3, "red": 4, "green": 3}))
+    >>> state_3 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
+    >>> player_a.append_player_state(state_2)
+    >>> player_a.append_player_state(state_3)
+
+
+    >>> player_b = Player()
+    >>> player_b.get_name() #doctest: +ELLIPSIS
+    'PLAYER_...'
+    """
     name: str
     player_state_history: PlayerStateHistory
     
     def __init__(self, name: str=None) -> None: # if name=None, make a random one
-        pass
+        if name:
+            self.name = name
+        else:
+            SUFFIX_LEN = 8
+            suffix = "".join(random.choice(string.ascii_uppercase) for i in range(SUFFIX_LEN))
+            self.name = "PLAYER_" + suffix
 
     def get_name(self) -> str:
         return self.name
@@ -142,13 +249,36 @@ class Player:
     def get_player_state_history(self) -> PlayerStateHistory:
         return self.player_state_history
 
-    def calc_score() -> int: # call PlayerState.calc_score()
+    def append_player_state(self, new_state) -> None:
+        self.player_state_history.append(new_state)
+        return
+
+    def get_current_player_state(self) -> PlayerState:
+        return self.player_state_history.get_current_state()
+
+    def calc_score() -> int:
         return self.player_state_history.get_current_state().calc_score()
 
-    def action_take_three_gems(self) -> None: # analyze current state; if applicable, create new state
+    def action_take_three_tokens(self, token_1, token_2, token_3) -> None: 
+        """
+        Complete the player action of taking three tokens.  
+
+        This function does *not* make sure that the game's gem cache actually has the desired gems, though it will make sure that the player will not exceed its maximum Cache size.
+        """
+        token_cache = self.get_current_state().get_token_cache()
+        
+        # if this player's TokenCache will overflow, raise Exception.
+        if token_cache.count() + 3 > core.PLAYER_TOKEN_CACHE_MAX:
+            raise Exception("not enough space in player's token cache to add three tokens")
+
+        # Create updated state including the updated token cache
+        token_cache.add(token_1)
+        token_cache.add(token_2)
+        token_cache.add(token_3)
+        
         pass
 
-    def action_take_two_gems(self) -> None:
+    def action_take_two_tokens(self) -> None:
         pass
 
     def action_reserve(self) -> None:
