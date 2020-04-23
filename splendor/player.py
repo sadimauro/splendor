@@ -13,7 +13,6 @@ from typing import List, Dict, Set
 
 logging.basicConfig(level=logging.INFO)
 
-
 class PlayerState:
     """
     The state of a player at some point during a game.
@@ -27,7 +26,7 @@ class PlayerState:
     >>> dev_card_cache.add(DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3}))
     >>> dev_card_cache.add(DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3}))
     >>> dev_card_reserve = DevCardReserve()
-    >>> dev_card_reserve.add(DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3}))
+    >>> dev_card_reserve.add(DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 1}))
     >>> a = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
 
     >>> a.calc_score()
@@ -92,6 +91,10 @@ def clone_playerState_new_token_cache(
         old_player_state: PlayerState,
         new_token_cache: PlayerTokenCache
         ) -> PlayerState:
+    """
+    Create a new PlayerState from an existing one but using the updated
+    TokenCache.
+    """
     ret = old_player_state.copy()
     ret.set_token_cache(new_token_cache)
     return ret
@@ -100,6 +103,10 @@ def clone_playerState_new_dev_card_cache(
         old_player_state: PlayerState,
         new_dev_card_cache: DevCardCache,
         ) -> PlayerState:
+    """
+    Create a new PlayerState from an existing one but using the updated
+    DevCardCache.
+    """
     ret = old_player_state.copy()
     ret.set_dev_card_cache(new_dev_card_cache)
     return ret
@@ -108,6 +115,10 @@ def clone_playerState_new_dev_card_reserve(
         old_player_state: PlayerState,
         new_dev_card_reserve: DevCardReserve,
         ) -> PlayerState:
+    """
+    Create a new PlayerState from an existing one but using the updated
+    DevCardReserve.
+    """
     ret = old_player_state.copy()
     ret.set_dev_card_reserve(new_dev_card_reserve)
     return ret
@@ -118,6 +129,10 @@ def clone_playerState(
         new_dev_card_cache: DevCardCache=None,
         new_dev_card_reserve: DevCardReserve=None,
         ) -> PlayerState:
+    """
+    Create a new PlayerState from an existing one but using the updated
+    TokenCache, DevCardCache, and/or DevCardReserve (any or all can be None).
+    """
     ret = old_player_state.copy()
     if new_token_cache:
         ret.set_token_cache(new_token_cache)
@@ -141,6 +156,9 @@ class PlayerStateHistory:
     >>> dev_card_cache.add(DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3}))
     >>> dev_card_cache.add(DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3}))
     >>> dev_card_reserve = DevCardReserve()
+    >>> dev_card_reserve.is_max()
+    False
+
     >>> dev_card_reserve.add(DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3}))
     >>> state_1 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
 
@@ -202,7 +220,7 @@ class Player:
 
     >>> player_a = Player("Joe")
     >>> player_a.get_name()
-    "Joe"
+    'Joe'
 
     >>> token_cache = PlayerTokenCache()
     >>> token_cache.add(Token(TokenType("black")))
@@ -213,7 +231,7 @@ class Player:
     >>> dev_card_cache.add(DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3}))
     >>> dev_card_cache.add(DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3}))
     >>> dev_card_reserve = DevCardReserve()
-    >>> dev_card_reserve.add(DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3}))
+    >>> dev_card_reserve.add(DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 2}))
     >>> state_1 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
     >>> player_a.append_player_state(state_1)
 
@@ -227,10 +245,11 @@ class Player:
     >>> player_a.append_player_state(state_2)
     >>> player_a.append_player_state(state_3)
 
-
     >>> player_b = Player()
     >>> player_b.get_name() #doctest: +ELLIPSIS
     'PLAYER_...'
+    >>> len(player_b.get_name())
+    15
     """
     name: str
     player_state_history: PlayerStateHistory
@@ -242,6 +261,7 @@ class Player:
             SUFFIX_LEN = 8
             suffix = "".join(random.choice(string.ascii_uppercase) for i in range(SUFFIX_LEN))
             self.name = "PLAYER_" + suffix
+        self.player_state_history = PlayerStateHistory()
 
     def get_name(self) -> str:
         return self.name
@@ -256,14 +276,16 @@ class Player:
     def get_current_player_state(self) -> PlayerState:
         return self.player_state_history.get_current_state()
 
-    def calc_score() -> int:
+    def calc_score(self) -> int:
         return self.player_state_history.get_current_state().calc_score()
 
     def action_take_three_tokens(self, token_1, token_2, token_3) -> None: 
         """
         Complete the player action of taking three tokens.  
 
-        This function does *not* make sure that the game's gem cache actually has the desired gems, though it will make sure that the player will not exceed its maximum Cache size.
+        This function does *not* make sure that the game's gem cache actually
+        has the desired gems, though it will make sure that the player will not
+        exceed its maximum Cache size.
         """
         token_cache = self.get_current_state().get_token_cache()
         
@@ -275,8 +297,12 @@ class Player:
         token_cache.add(token_1)
         token_cache.add(token_2)
         token_cache.add(token_3)
-        
-        pass
+        new_state = clone_playerState_new_token_cache(
+                self.player_state_history.get_current_state(),
+                token_cache,
+                )
+        self.append_player_state(new_state)
+        return
 
     def action_take_two_tokens(self) -> None:
         pass

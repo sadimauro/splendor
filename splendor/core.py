@@ -294,9 +294,11 @@ class DevCardReserve:
     2
     """
 
-    s: set
+    s: Set[DevCard]
 
-    def __init__(self, s: Set[DevCard] = set()) -> None:
+    def __init__(self, s: Set[DevCard] = None) -> None:
+        if s is None:
+            s = set()
         self.s = s
 
     def add(self, dev_card: DevCard) -> None:
@@ -688,7 +690,7 @@ class PlayerTokenCache(TokenCache):
     True
     >>> a.is_over_max()
     False
-    >>> a.add(Token("red")))
+    >>> a.add(Token("red"))
     >>> a.count() == PLAYER_TOKEN_CACHE_MAX + 1
     True
     >>> a.is_max()
