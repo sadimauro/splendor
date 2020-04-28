@@ -1,7 +1,7 @@
 """
 """
 
-from core import DevCard, DevCardCache, DevCardReserve, DevCardType, PlayerTokenCache, Token, TokenType, WINNING_SCORE
+from core import DevCard, DevCardCache, DevCardReserve, DevCardType, PlayerTokenCache, Token, TokenType, PLAYER_TOKEN_CACHE_MAX, WINNING_SCORE
 
 from copy import deepcopy
 from enum import Enum
@@ -223,9 +223,9 @@ class Player:
     'Joe'
 
     >>> token_cache = PlayerTokenCache()
-    >>> token_cache.add(Token(TokenType("black")))
-    >>> token_cache.add(Token(TokenType("black")))
-    >>> token_cache.add(Token(TokenType("red")))
+    >>> token_cache.add(Token("black"))
+    >>> token_cache.add(Token("black"))
+    >>> token_cache.add(Token("red"))
     >>> dev_card_cache = DevCardCache()
     >>> dev_card_cache.add(DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1}))
     >>> dev_card_cache.add(DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3}))
@@ -238,12 +238,34 @@ class Player:
     >>> player_a.calc_score()
     3
 
-    >>> token_cache.add(Token(TokenType("blue")))
+    >>> token_cache.add(Token("blue"))
     >>> state_2 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
     >>> dev_card_reserve.add(DevCard(level=2, t=DevCardType("red"), ppoints=5, cost={"white": 3, "red": 4, "green": 3}))
     >>> state_3 = PlayerState(token_cache, dev_card_cache, dev_card_reserve)
     >>> player_a.append_player_state(state_2)
     >>> player_a.append_player_state(state_3)
+
+    >>> player_a.get_current_token_cache().size()
+    4
+    >>> player_a.action_take_three_tokens(Token("black"), Token("blue"), Token("green"))
+    >>> player_a.get_current_token_cache().size()
+    7
+    >>> player_a.action_take_three_tokens(Token("black"), Token("black"), Token("green")) #doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    Exception...
+    >>> player_a.action_take_three_tokens(Token("black"), Token("yellow"), Token("green")) #doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    Exception...
+
+    >>> player_a.action_take_two_tokens(Token("red"), Token("red"))
+    >>> player_a.get_current_token_cache().size()
+    9
+    >>> player_a.action_take_two_tokens(Token("red"), Token("black")) #doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    Exception...
+    >>> player_a.action_take_two_tokens(Token("yellow"), Token("yellow")) #doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    Exception...
 
     >>> player_b = Player()
     >>> player_b.get_name() #doctest: +ELLIPSIS
@@ -275,38 +297,67 @@ class Player:
 
     def get_current_player_state(self) -> PlayerState:
         return self.player_state_history.get_current_state()
+    
+    def get_current_token_cache(self) -> PlayerTokenCache:
+        return self.player_state_history.get_current_state().get_token_cache()
 
     def calc_score(self) -> int:
         return self.player_state_history.get_current_state().calc_score()
 
-    def action_take_three_tokens(self, token_1, token_2, token_3) -> None: 
+    def _action_take_tokens(self, token_add_list) -> None:
         """
-        Complete the player action of taking three tokens.  
+        Complete the player action of taking tokens.  
 
         This function does *not* make sure that the game's gem cache actually
         has the desired gems, though it will make sure that the player will not
         exceed its maximum Cache size.
         """
-        token_cache = self.get_current_state().get_token_cache()
+        token_cache = self.get_current_token_cache()
         
         # if this player's TokenCache will overflow, raise Exception.
-        if token_cache.count() + 3 > core.PLAYER_TOKEN_CACHE_MAX:
-            raise Exception("not enough space in player's token cache to add three tokens")
+        if token_cache.count() + len(token_add_list) > PLAYER_TOKEN_CACHE_MAX:
+            raise Exception(f"not enough space in player's token cache to add {len(token_add_list)} tokens")
 
         # Create updated state including the updated token cache
-        token_cache.add(token_1)
-        token_cache.add(token_2)
-        token_cache.add(token_3)
+        for token_to_add in token_add_list:
+            token_cache.add(token_to_add)
         new_state = clone_playerState_new_token_cache(
                 self.player_state_history.get_current_state(),
                 token_cache,
                 )
         self.append_player_state(new_state)
         return
+    
+    def action_take_three_tokens(self, token_1, token_2, token_3) -> None:
+        """
+        Complete the player action of taking three tokens.
 
-    def action_take_two_tokens(self) -> None:
-        pass
+        This function makes sure that the tokens are all of different type, and that none are yellow.
+        """
+        if token_1.get_type() == token_2.get_type() or \
+                token_1.get_type() == token_3.get_type() or \
+                token_2.get_type() == token_3.get_type():
+            raise Exception("action not allowed: chosen tokens must be all different")
+        if token_1.is_joker() or \
+                token_2.is_joker() or\
+                token_3.is_joker():
+            raise Exception("action not allowed: chosen tokens must not be jokers")
 
+        return self._action_take_tokens([token_1, token_2, token_3])
+
+    def action_take_two_tokens(self, token_1, token_2) -> None:
+        """
+        Complete the player action of taking two tokens.
+        
+        This function makes sure that the tokens are of the same type, and that none are yellow.
+        """
+        if token_1.get_type() != token_2.get_type():
+            raise Exception("action not allowed: chosen tokens must be the same")
+        if token_1.is_joker() or \
+                token_2.is_joker():
+            raise Exception("action not allowed: chosen tokens must not be jokers")
+        return self._action_take_tokens([token_1, token_2])
+    
     def action_reserve(self) -> None:
         pass
 

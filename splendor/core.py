@@ -36,13 +36,17 @@ class GemType:
     'black'
     >>> a.get_desc_long()
     'black (onyx)'
+    >>> a.is_joker()
+    False
     
     >>> b = GemType("black")
-    >>> c = GemType("blue")
+    >>> c = GemType("yellow")
     >>> a == b
     True
     >>> a == c
     False
+    >>> c.is_joker()
+    True
     """
 
     t: str
@@ -62,6 +66,9 @@ class GemType:
     def __str__(self) -> str:
         return self.get_desc()
     
+    def get_type(self) -> str:
+        return self.get_desc()
+
     def get_desc(self) -> str:
         return f"{self.t}"
     
@@ -71,6 +78,8 @@ class GemType:
         retstr += f"({GEM_TYPE_ALL_STR_DICT.get(self.t)})"
         return retstr
 
+    def is_joker(self) -> bool:
+        return self.get_type() == "yellow"
 
 class DevCardType(GemType):
     """
@@ -561,6 +570,12 @@ class Token:
         self.t = TokenType(token_type_str)
         self.image = image
 
+    def get_type(self) -> TokenType:
+        return self.t.get_type()
+
+    def is_joker(self) -> bool:
+        return self.t.is_joker()
+
     def __str__(self) -> str:
         return self.t.__str__()
 
@@ -634,6 +649,12 @@ class TokenCache:
         for key in self.d.keys():
             count += self.d[key]
         return count
+    
+    def size(self) -> int:
+        """
+        Same as count().
+        """
+        return self.count()
 
     def count_type(self, token_type: TokenType) -> int:
         count = self.d.get(token_type)
