@@ -1,7 +1,17 @@
 """
 """
 
-from core import DevCard, DevCardCache, DevCardReserve, DevCardType, PlayerTokenCache, Token, TokenType, PLAYER_TOKEN_CACHE_MAX, WINNING_SCORE
+from core import (
+    DevCard,
+    DevCardCache,
+    DevCardReserve,
+    DevCardType,
+    PlayerTokenCache,
+    Token,
+    TokenType,
+    PLAYER_TOKEN_CACHE_MAX,
+    WINNING_SCORE,
+)
 
 from copy import deepcopy
 from enum import Enum
@@ -12,6 +22,7 @@ import string
 from typing import List, Dict, Set
 
 logging.basicConfig(level=logging.INFO)
+
 
 class PlayerState:
     """
@@ -40,11 +51,17 @@ class PlayerState:
     True
 
     """
+
     token_cache: PlayerTokenCache
     dev_card_cache: DevCardCache
     dev_card_reserve: DevCardReserve
 
-    def __init__(self, token_cache: PlayerTokenCache, dev_card_cache: DevCardCache, dev_card_reserve: DevCardReserve) -> None:
+    def __init__(
+        self,
+        token_cache: PlayerTokenCache,
+        dev_card_cache: DevCardCache,
+        dev_card_reserve: DevCardReserve,
+    ) -> None:
         self.token_cache = token_cache
         self.dev_card_cache = dev_card_cache
         self.dev_card_reserve = dev_card_reserve
@@ -54,7 +71,7 @@ class PlayerState:
 
     def get_token_cache(self) -> PlayerTokenCache:
         return self.token_cache
-    
+
     def set_token_cache(self, new_token_cache) -> None:
         self.token_cache = new_token_cache
         return
@@ -65,14 +82,14 @@ class PlayerState:
     def set_dev_card_cache(self, new_dev_card_cache) -> None:
         self.dev_card_cache = new_dev_card_cache
         return
-    
+
     def get_dev_card_reserve(self) -> DevCardReserve:
         return self.dev_card_reserve
 
     def set_dev_card_reserve(self, new_dev_card_reserve) -> None:
         self.dev_card_reserve = new_dev_card_reserve
         return
-    
+
     def calc_score(self) -> int:
         return self.dev_card_cache.calc_ppoints()
 
@@ -87,10 +104,10 @@ class PlayerState:
         ret += self.dev_card_reserve + "\n"
         return ret
 
+
 def clone_playerState_new_token_cache(
-        old_player_state: PlayerState,
-        new_token_cache: PlayerTokenCache
-        ) -> PlayerState:
+    old_player_state: PlayerState, new_token_cache: PlayerTokenCache
+) -> PlayerState:
     """
     Create a new PlayerState from an existing one but using the updated
     TokenCache.
@@ -99,10 +116,10 @@ def clone_playerState_new_token_cache(
     ret.set_token_cache(new_token_cache)
     return ret
 
+
 def clone_playerState_new_dev_card_cache(
-        old_player_state: PlayerState,
-        new_dev_card_cache: DevCardCache,
-        ) -> PlayerState:
+    old_player_state: PlayerState, new_dev_card_cache: DevCardCache,
+) -> PlayerState:
     """
     Create a new PlayerState from an existing one but using the updated
     DevCardCache.
@@ -111,10 +128,10 @@ def clone_playerState_new_dev_card_cache(
     ret.set_dev_card_cache(new_dev_card_cache)
     return ret
 
+
 def clone_playerState_new_dev_card_reserve(
-        old_player_state: PlayerState,
-        new_dev_card_reserve: DevCardReserve,
-        ) -> PlayerState:
+    old_player_state: PlayerState, new_dev_card_reserve: DevCardReserve,
+) -> PlayerState:
     """
     Create a new PlayerState from an existing one but using the updated
     DevCardReserve.
@@ -123,12 +140,13 @@ def clone_playerState_new_dev_card_reserve(
     ret.set_dev_card_reserve(new_dev_card_reserve)
     return ret
 
+
 def clone_playerState(
-        old_player_state: PlayerState,
-        new_token_cache: PlayerTokenCache=None,
-        new_dev_card_cache: DevCardCache=None,
-        new_dev_card_reserve: DevCardReserve=None,
-        ) -> PlayerState:
+    old_player_state: PlayerState,
+    new_token_cache: PlayerTokenCache = None,
+    new_dev_card_cache: DevCardCache = None,
+    new_dev_card_reserve: DevCardReserve = None,
+) -> PlayerState:
     """
     Create a new PlayerState from an existing one but using the updated
     TokenCache, DevCardCache, and/or DevCardReserve (any or all can be None).
@@ -186,6 +204,7 @@ class PlayerStateHistory:
     1
 
     """
+
     l: List[PlayerState]
 
     def __init__(self) -> None:
@@ -199,20 +218,23 @@ class PlayerStateHistory:
         """ Retrieve the current state within this PlayerStateHistory. """
         if len(self.l) == 0:
             return None
-        return self.l[len(self.l)-1]
-    
+        return self.l[len(self.l) - 1]
+
     def get_current_state_no(self) -> int:
         """ Return the one-based state number (or zero, if the list is empty)."""
         return len(self.l)
 
-    def revert(self, state_no: int) -> None: 
+    def revert(self, state_no: int) -> None:
         """ Revert history to state at state_no, and remove newer states. """
         if state_no <= 0:
             raise Exception("state number cannot be negative")
         if state_no > len(self.l):
-            raise Exception("state number cannot be greater than the current state number")
+            raise Exception(
+                "state number cannot be greater than the current state number"
+            )
         self.l = self.l[0:state_no]
         return
+
 
 class Player:
     """
@@ -295,15 +317,18 @@ class Player:
     >>> len(player_b.get_name())
     15
     """
+
     name: str
     player_state_history: PlayerStateHistory
-    
-    def __init__(self, name: str=None) -> None: # if name=None, make a random one
+
+    def __init__(self, name: str = None) -> None:  # if name=None, make a random one
         if name:
             self.name = name
         else:
             SUFFIX_LEN = 8
-            suffix = "".join(random.choice(string.ascii_uppercase) for i in range(SUFFIX_LEN))
+            suffix = "".join(
+                random.choice(string.ascii_uppercase) for i in range(SUFFIX_LEN)
+            )
             self.name = "PLAYER_" + suffix
         self.player_state_history = PlayerStateHistory()
 
@@ -319,13 +344,13 @@ class Player:
 
     def get_current_player_state(self) -> PlayerState:
         return self.player_state_history.get_current_state()
-    
+
     def get_current_token_cache(self) -> PlayerTokenCache:
         return self.get_current_player_state().get_token_cache()
-    
+
     def get_current_dev_card_cache(self) -> DevCardCache:
         return self.get_current_player_state().get_dev_card_cache()
-    
+
     def get_current_dev_card_reserve(self) -> DevCardReserve:
         return self.get_current_player_state().get_dev_card_reserve()
 
@@ -341,34 +366,35 @@ class Player:
         exceed its maximum Cache size.
         """
         token_cache = self.get_current_token_cache()
-        
+
         # if this player's TokenCache will overflow, raise Exception.
         if token_cache.count() + len(token_add_list) > PLAYER_TOKEN_CACHE_MAX:
-            raise Exception(f"not enough space in player's token cache to add {len(token_add_list)} tokens")
+            raise Exception(
+                f"not enough space in player's token cache to add {len(token_add_list)} tokens"
+            )
 
         # Create updated state including the updated token cache
         for token_to_add in token_add_list:
             token_cache.add(token_to_add)
         new_state = clone_playerState_new_token_cache(
-                self.get_current_player_state(),
-                token_cache,
-                )
+            self.get_current_player_state(), token_cache,
+        )
         self.append_player_state(new_state)
         return
-    
+
     def action_take_three_tokens(self, token_1, token_2, token_3) -> None:
         """
         Complete the player action of taking three tokens.
 
         This function makes sure that the tokens are all of different type, and that none are yellow.
         """
-        if token_1.get_type() == token_2.get_type() or \
-                token_1.get_type() == token_3.get_type() or \
-                token_2.get_type() == token_3.get_type():
+        if (
+            token_1.get_type() == token_2.get_type()
+            or token_1.get_type() == token_3.get_type()
+            or token_2.get_type() == token_3.get_type()
+        ):
             raise Exception("action not allowed: chosen tokens must be all different")
-        if token_1.is_joker() or \
-                token_2.is_joker() or\
-                token_3.is_joker():
+        if token_1.is_joker() or token_2.is_joker() or token_3.is_joker():
             raise Exception("action not allowed: chosen tokens must not be jokers")
 
         return self._action_take_tokens([token_1, token_2, token_3])
@@ -381,11 +407,10 @@ class Player:
         """
         if token_1.get_type() != token_2.get_type():
             raise Exception("action not allowed: chosen tokens must be the same")
-        if token_1.is_joker() or \
-                token_2.is_joker():
+        if token_1.is_joker() or token_2.is_joker():
             raise Exception("action not allowed: chosen tokens must not be jokers")
         return self._action_take_tokens([token_1, token_2])
-    
+
     def action_reserve_dev_card(self, dev_card_to_add) -> None:
         """
         Complete the player action of reserving a development card.
@@ -393,17 +418,18 @@ class Player:
         This functions makes sure that the player has ample room is his/her cache to fit the card.
         """
         dev_card_reserve = self.get_current_dev_card_reserve()
-        
+
         # if this player's DevCardReserve will overflow, raise Exception.
         if dev_card_reserve.is_max():
-            raise Exception(f"not enough space in player's dev card reserve to add a card")
+            raise Exception(
+                f"not enough space in player's dev card reserve to add a card"
+            )
 
         # Create updated state including the updated token cache
         dev_card_reserve.add(dev_card_to_add)
         new_state = clone_playerState_new_dev_card_reserve(
-                self.get_current_player_state(),
-                dev_card_reserve,
-                )
+            self.get_current_player_state(), dev_card_reserve,
+        )
         self.append_player_state(new_state)
         return
 
@@ -423,9 +449,9 @@ class Player:
         dev_card_cache.add(dev_card_to_add)
         token_cache.purchase_dev_card(dev_card_to_add)
         new_state = clone_playerState(
-                self.get_current_player_state(),
-                new_token_cache=token_cache,
-                new_dev_card_cache=dev_card_cache,
-                )
+            self.get_current_player_state(),
+            new_token_cache=token_cache,
+            new_dev_card_cache=dev_card_cache,
+        )
         self.append_player_state(new_state)
         return

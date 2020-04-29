@@ -11,21 +11,22 @@ from typing import List, Dict, Set
 logging.basicConfig(level=logging.INFO)
 
 GEM_TYPE_COMMON_STR_DICT = {
-        "black": "onyx",
-        "blue": "sapphire",
-        "green": "emerald",
-        "red": "ruby",
-        "white": "diamond",
-        }
+    "black": "onyx",
+    "blue": "sapphire",
+    "green": "emerald",
+    "red": "ruby",
+    "white": "diamond",
+}
 
 GEM_TYPE_ALL_STR_DICT = {
-        "black": "onyx",
-        "blue": "sapphire",
-        "green": "emerald",
-        "red": "ruby",
-        "white": "diamond",
-        "yellow": "gold",
-        }
+    "black": "onyx",
+    "blue": "sapphire",
+    "green": "emerald",
+    "red": "ruby",
+    "white": "diamond",
+    "yellow": "gold",
+}
+
 
 class GemType:
     """
@@ -50,13 +51,10 @@ class GemType:
     """
 
     t: str
-    
-    def __init__(
-            self,
-            t: str,
-            ) -> None:
+
+    def __init__(self, t: str,) -> None:
         self.t = t
-   
+
     def __eq__(self, other) -> bool:
         return self.t == other.t
 
@@ -65,13 +63,13 @@ class GemType:
 
     def __str__(self) -> str:
         return self.get_desc()
-    
+
     def get_type(self) -> str:
         return self.get_desc()
 
     def get_desc(self) -> str:
         return f"{self.t}"
-    
+
     def get_desc_long(self) -> str:
         retstr = ""
         retstr += f"{self.t} "
@@ -80,6 +78,7 @@ class GemType:
 
     def is_joker(self) -> bool:
         return self.get_type() == "yellow"
+
 
 class DevCardType(GemType):
     """
@@ -98,6 +97,7 @@ class DevCardType(GemType):
     >>> a == c
     False
     """
+
     pass
 
 
@@ -112,27 +112,23 @@ class DevCard:
     >>> a.get_cost_str()
     "{'blue': 2, 'red': 1}"
     """
-    
-    level: int # 1, 2, or 3
-    t: DevCardType # also bonus
+
+    level: int  # 1, 2, or 3
+    t: DevCardType  # also bonus
     ppoints: int
-    cost: Dict[str, int] # str -> count
+    cost: Dict[str, int]  # str -> count
 
     def __init__(
-            self,
-            level: int, 
-            t: DevCardType, 
-            ppoints: int, 
-            cost: Dict[str, int],
-            ):
+        self, level: int, t: DevCardType, ppoints: int, cost: Dict[str, int],
+    ):
         self.level = level
         self.t = t
         self.ppoints = ppoints
         self.cost = cost
 
-    #def is_purchasable(dev_card_cache: DevCardCache, token_player_cache: TokenPlayerCache) -> bool:
+    # def is_purchasable(dev_card_cache: DevCardCache, token_player_cache: TokenPlayerCache) -> bool:
     #    pass
-    
+
     def get_cost_dict(self) -> Dict[str, int]:
         return self.cost
 
@@ -145,8 +141,9 @@ class DevCard:
     def __repr__(self) -> str:
         return self.__str__()
 
-    #def get_image(self) -> bytes:
+    # def get_image(self) -> bytes:
     #    pass
+
 
 class DevCardCache:
     """
@@ -191,15 +188,13 @@ class DevCardCache:
     Exception: cannot remove card from DevCardCache: card not found
 
     """
+
     d: Dict[DevCardType, Set[DevCard]]
 
     def __init__(self):
         self.d = {}
 
-    def add(
-            self,
-            dev_card: DevCard,
-            ) -> None:
+    def add(self, dev_card: DevCard,) -> None:
         if self.d.get(dev_card.t) is None:
             logging.debug("creating new key within self.d")
             self.d[dev_card.t] = set()
@@ -270,9 +265,11 @@ class DevCardCache:
             ret_list.append(self.d.get(t).__repr__() + "\n")
         return "\n".join(ret_list)
 
+
 #    get_image() -> bytes
 
 DEV_CARD_RESERVE_COUNT_MAX = 3
+
 
 class DevCardReserve:
     """
@@ -371,9 +368,11 @@ class DevCardReserve:
 
         return ret_str
 
+
 UPFACING_CARDS_LEN = 4
 
-class DevCardDeck: 
+
+class DevCardDeck:
     """
     A list of all the dev cards of one level, representing one of the three game decks.
 
@@ -424,7 +423,8 @@ class DevCardDeck:
     """
 
     level: int
-    l: list # indices 0..3 are the face-up cards; 4..n are the face-down, where 4 is the top-most
+    l: list  # indices 0..3 are the face-up cards; 4..n are the face-down, where 4 is the top-most
+
     def __init__(self, level: int, l: List[DevCard] = None) -> None:
         """
         Load all of this level's cards
@@ -492,12 +492,14 @@ class DevCardDeck:
 
         return ret_str
 
+
 #    get_image() -> bytes
 
-#class DevCardDecks:
+# class DevCardDecks:
 #    l: list # indices 0..2 are decks #1..3
 
-#DEV_CARD_DECKS = [set(), set(), set()] # to fill in with actual cards
+# DEV_CARD_DECKS = [set(), set(), set()] # to fill in with actual cards
+
 
 class Noble:
     """
@@ -509,11 +511,12 @@ class Noble:
     >>> a.get_cost() == {'black': 4, 'white': 4}
     True
     """
+
     ppoints: int
     cost: Dict[DevCardType, int]
     image: bytes
 
-    def __init__(self, ppoints: int, cost: Dict[DevCardType, int], image: bytes=None):
+    def __init__(self, ppoints: int, cost: Dict[DevCardType, int], image: bytes = None):
         self.ppoints = ppoints
         self.cost = cost
         self.image = image
@@ -530,7 +533,9 @@ class Noble:
     def __str__(self) -> str:
         return f"p{self.ppoints}/{self.get_cost_str()}"
 
+
 #    get_image() -> bytes
+
 
 class NoblesInPlay:
     """ 
@@ -543,9 +548,10 @@ class NoblesInPlay:
     >>> a.count()
     3
     """
+
     s: Set[Noble]
 
-    def __init__(self, s: Set[Noble]=set()) -> None:
+    def __init__(self, s: Set[Noble] = set()) -> None:
         self.s = s
 
     def count(self) -> int:
@@ -558,7 +564,9 @@ class NoblesInPlay:
             retstr += noble.__str__() + "\n"
         return retstr
 
-#NOBLES_DECK = set(...) # to fill in with actual noble cards
+
+# NOBLES_DECK = set(...) # to fill in with actual noble cards
+
 
 class TokenType(GemType):
     """
@@ -577,7 +585,9 @@ class TokenType(GemType):
     >>> a == c
     False
     """
+
     pass
+
 
 class Token:
     """
@@ -587,10 +597,11 @@ class Token:
     >>> a.__str__()
     'black'
     """
+
     t: TokenType
     image: bytes
 
-    def __init__(self, token_type_str: str, image: bytes=None) -> None:
+    def __init__(self, token_type_str: str, image: bytes = None) -> None:
         self.t = TokenType(token_type_str)
         self.image = image
 
@@ -604,6 +615,7 @@ class Token:
         return self.t.__str__()
 
         #    get_image() -> bytes
+
 
 class TokenCache:
     """
@@ -648,32 +660,35 @@ class TokenCache:
     >>> a.count()
     5
     """
+
     d: Dict[TokenType, int]
 
-    def __init__(self, s: Set[Token]=set()) -> None:
+    def __init__(self, s: Set[Token] = set()) -> None:
         self.d = {}
         for item in s:
             self.d[item.t] = self.d.setdefault(item.t, 0) + 1
-    
+
     def empty(self) -> None:
         self.d = {}
 
     def add(self, token: Token) -> None:
         self.d[token.t] = self.d.setdefault(token.t, 0) + 1
 
-    def remove(self, token_type: TokenType, how_many: int=1) -> None:
+    def remove(self, token_type: TokenType, how_many: int = 1) -> None:
         if self.d.get(token_type) and self.d.get(token_type) >= how_many:
             self.d[token_type] -= how_many
             return
         else:
-            raise Exception(f"{how_many} of token type {token_type} not found in token cache")
+            raise Exception(
+                f"{how_many} of token type {token_type} not found in token cache"
+            )
 
     def count(self) -> int:
         count = 0
         for key in self.d.keys():
             count += self.d[key]
         return count
-    
+
     def size(self) -> int:
         """
         Same as count().
@@ -692,7 +707,9 @@ class TokenCache:
             return True
         return False
 
+
 PLAYER_TOKEN_CACHE_MAX = 10
+
 
 class PlayerTokenCache(TokenCache):
     """
@@ -794,6 +811,7 @@ class PlayerTokenCache(TokenCache):
 # players count -> tokens count per type
 TOKEN_COUNT_MAP = {2: 4, 3: 6, 4: 7}
 
+
 class GameTokenCache(TokenCache):
     """
     The set of tokens available within a game.  The initial counts depend on the number of players.
@@ -826,6 +844,7 @@ class GameTokenCache(TokenCache):
     >>> a.count_type(TokenType("red"))
     1
     """
+
     def __init__(self, players_count: int) -> None:
         self.d = {}
         self.fill(players_count)
@@ -837,7 +856,8 @@ class GameTokenCache(TokenCache):
             self.d[TokenType(typ)] = TOKEN_COUNT_MAP[players_count]
         self.d[TokenType("yellow")] = 5
 
-    #def can_action_take_three_tokens(token_types_set: Set[TokenType]) -> bool
-    #def can_action_take_two_tokens(token_types_set: Set[TokenType]) -> bool
+    # def can_action_take_three_tokens(token_types_set: Set[TokenType]) -> bool
+    # def can_action_take_two_tokens(token_types_set: Set[TokenType]) -> bool
+
 
 WINNING_SCORE = 15
