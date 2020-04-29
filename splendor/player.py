@@ -267,6 +267,28 @@ class Player:
     Traceback (most recent call last):
     Exception...
 
+    >>> player_a.get_current_dev_card_reserve().size()
+    2
+    >>> player_a.action_reserve_dev_card(DevCard(level=2, t=DevCardType("blue"), ppoints=0, cost={"white": 1, "red": 1, "green": 2}))
+    >>> player_a.get_current_dev_card_reserve().size()
+    3
+    >>> player_a.action_reserve_dev_card(DevCard(level=1, t=DevCardType("red"), ppoints=2, cost={"white": 1, "red": 1, "green": 2})) #doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    Exception...
+    
+    >>> player_a.get_current_dev_card_cache().size()
+    3
+    >>> player_a.get_current_token_cache().size()
+    9
+    >>> player_a.action_purchase_dev_card(DevCard(level=1, t=DevCardType("blue"), ppoints=0, cost={"black": 2}))
+    >>> player_a.get_current_dev_card_cache().size()
+    4
+    >>> player_a.get_current_token_cache().size()
+    7
+    >>> player_a.action_purchase_dev_card(DevCard(level=3, t=DevCardType("red"), ppoints=5, cost={"white": 4, "red": 4, "green": 4})) #doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    Exception...
+    
     >>> player_b = Player()
     >>> player_b.get_name() #doctest: +ELLIPSIS
     'PLAYER_...'
@@ -299,10 +321,16 @@ class Player:
         return self.player_state_history.get_current_state()
     
     def get_current_token_cache(self) -> PlayerTokenCache:
-        return self.player_state_history.get_current_state().get_token_cache()
+        return self.get_current_player_state().get_token_cache()
+    
+    def get_current_dev_card_cache(self) -> DevCardCache:
+        return self.get_current_player_state().get_dev_card_cache()
+    
+    def get_current_dev_card_reserve(self) -> DevCardReserve:
+        return self.get_current_player_state().get_dev_card_reserve()
 
     def calc_score(self) -> int:
-        return self.player_state_history.get_current_state().calc_score()
+        return self.get_current_player_state().calc_score()
 
     def _action_take_tokens(self, token_add_list) -> None:
         """
@@ -322,7 +350,7 @@ class Player:
         for token_to_add in token_add_list:
             token_cache.add(token_to_add)
         new_state = clone_playerState_new_token_cache(
-                self.player_state_history.get_current_state(),
+                self.get_current_player_state(),
                 token_cache,
                 )
         self.append_player_state(new_state)
@@ -358,9 +386,46 @@ class Player:
             raise Exception("action not allowed: chosen tokens must not be jokers")
         return self._action_take_tokens([token_1, token_2])
     
-    def action_reserve(self) -> None:
-        pass
+    def action_reserve_dev_card(self, dev_card_to_add) -> None:
+        """
+        Complete the player action of reserving a development card.
 
-    def action_purchase(self) -> None:
-        pass
+        This functions makes sure that the player has ample room is his/her cache to fit the card.
+        """
+        dev_card_reserve = self.get_current_dev_card_reserve()
+        
+        # if this player's DevCardReserve will overflow, raise Exception.
+        if dev_card_reserve.is_max():
+            raise Exception(f"not enough space in player's dev card reserve to add a card")
 
+        # Create updated state including the updated token cache
+        dev_card_reserve.add(dev_card_to_add)
+        new_state = clone_playerState_new_dev_card_reserve(
+                self.get_current_player_state(),
+                dev_card_reserve,
+                )
+        self.append_player_state(new_state)
+        return
+
+    def action_purchase_dev_card(self, dev_card_to_add) -> None:
+        """
+        Complete the player action to purchase a development card, adding it to the player's cache.
+        
+        This function makes sure that the player has the funds (tokens) available to purchase the card, removes them if so, or raises an Exception if not.
+        """
+        dev_card_cache = self.get_current_dev_card_cache()
+        token_cache = self.get_current_token_cache()
+
+        if not token_cache.can_purchase_dev_card(dev_card_to_add):
+            raise Exception(f"cannot purchase dev card: insufficient tokens")
+
+        # Create updated state including the updated token cache and dev card cache
+        dev_card_cache.add(dev_card_to_add)
+        token_cache.purchase_dev_card(dev_card_to_add)
+        new_state = clone_playerState(
+                self.get_current_player_state(),
+                new_token_cache=token_cache,
+                new_dev_card_cache=dev_card_cache,
+                )
+        self.append_player_state(new_state)
+        return

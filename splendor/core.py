@@ -132,6 +132,9 @@ class DevCard:
 
     #def is_purchasable(dev_card_cache: DevCardCache, token_player_cache: TokenPlayerCache) -> bool:
     #    pass
+    
+    def get_cost_dict(self) -> Dict[str, int]:
+        return self.cost
 
     def get_cost_str(self) -> str:
         return self.cost.__str__()
@@ -217,6 +220,21 @@ class DevCardCache:
         except Exception as e:
             raise Exception(f"cannot remove card from DevCardCache: {e}")
         return
+
+    def count(self) -> int:
+        """
+        Return the number of dev cards in the cache.
+        """
+        total_count = 0
+        for typ in self.d.keys():
+            total_count += len(self.d[typ])
+        return total_count
+
+    def size(self) -> int:
+        """
+        Same as count().
+        """
+        return self.count()
 
     def calc_ppoints(self) -> int:
         """
@@ -326,8 +344,14 @@ class DevCardReserve:
             raise Exception("cannot remove card from DevCardReserve: not found")
         return
 
-    def count(self):
+    def count(self) -> int:
         return len(self.s)
+
+    def size(self) -> int:
+        """
+        Same as count().
+        """
+        return self.count()
 
     def is_max(self) -> bool:
         return len(self.s) >= DEV_CARD_RESERVE_COUNT_MAX
@@ -618,9 +642,9 @@ class TokenCache:
     5
     >>> a.count_type(TokenType("yellow"))
     0
-    >>> a.remove(TokenType("yellow"))
+    >>> a.remove(TokenType("yellow")) #doctest: +ELLIPSIS
     Traceback (most recent call last):
-    Exception: token type yellow not found in token cache
+    Exception:...
     >>> a.count()
     5
     """
@@ -637,12 +661,12 @@ class TokenCache:
     def add(self, token: Token) -> None:
         self.d[token.t] = self.d.setdefault(token.t, 0) + 1
 
-    def remove(self, token_type: TokenType) -> None:
-        if self.d.get(token_type) and self.d.get(token_type) > 0:
-            self.d[token_type] -= 1
+    def remove(self, token_type: TokenType, how_many: int=1) -> None:
+        if self.d.get(token_type) and self.d.get(token_type) >= how_many:
+            self.d[token_type] -= how_many
             return
         else:
-            raise Exception(f"token type {token_type} not found in token cache")
+            raise Exception(f"{how_many} of token type {token_type} not found in token cache")
 
     def count(self) -> int:
         count = 0
@@ -724,22 +748,48 @@ class PlayerTokenCache(TokenCache):
     10
     >>> a.count_type(TokenType("red"))
     4
-    >>> a.remove(TokenType("yellow"))
+    >>> a.remove(TokenType("yellow")) #doctest: +ELLIPSIS
     Traceback (most recent call last):
-    Exception: token type yellow not found in token cache
+    Exception:...
     >>> a.count()
     10
     """
 
-    def is_max(self) -> True:
+    def is_max(self) -> bool:
         if self.count() == PLAYER_TOKEN_CACHE_MAX:
             return True
         return False
 
-    def is_over_max(self) -> True:
+    def is_over_max(self) -> bool:
         if self.count() > PLAYER_TOKEN_CACHE_MAX:
             return True
         return False
+
+    def can_purchase_dev_card(self, dev_card) -> bool:
+        """
+        Return True if dev_card can be purchased given the tokens in this token cache.
+        
+        TODO: how to handle jokers?
+        """
+        cost_dict = dev_card.get_cost_dict()
+        for typ_str in cost_dict.keys():
+            if cost_dict[typ_str] > self.count_type(TokenType(typ_str)):
+                return False
+        return True
+
+    def purchase_dev_card(self, dev_card) -> None:
+        """
+        Remove tokens needed to purchase dev card.  Raise exception if there aren't enough tokens.
+        
+        TODO: how to handle jokers?
+        """
+        if not self.can_purchase_dev_card(dev_card):
+            raise Exception(f"insufficient tokens to purchase dev card {dev_card}")
+        cost_dict = dev_card.get_cost_dict()
+        for typ_str in cost_dict.keys():
+            self.remove(TokenType(typ_str), cost_dict[typ_str])
+        return
+
 
 # players count -> tokens count per type
 TOKEN_COUNT_MAP = {2: 4, 3: 6, 4: 7}
@@ -768,9 +818,9 @@ class GameTokenCache(TokenCache):
     0
     >>> a.is_type_empty(TokenType("red"))
     True
-    >>> a.remove(TokenType("red"))
+    >>> a.remove(TokenType("red")) #doctest: +ELLIPSIS
     Traceback (most recent call last):
-    Exception: token type red not found in token cache
+    Exception:...
 
     >>> a.add(Token("red"))
     >>> a.count_type(TokenType("red"))
