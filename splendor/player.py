@@ -1,4 +1,5 @@
 """
+player.py - Player and player-related classes.
 """
 
 from core import (

@@ -376,6 +376,8 @@ class DevCardDeck:
     """
     A list of all the dev cards of one level, representing one of the three game decks.
 
+    Includes face-up and face-down cards.  Face-up cards are at lowest indices.
+
     >>> dc0 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
     >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
     >>> dc2 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
@@ -494,11 +496,6 @@ class DevCardDeck:
 
 
 #    get_image() -> bytes
-
-# class DevCardDecks:
-#    l: list # indices 0..2 are decks #1..3
-
-# DEV_CARD_DECKS = [set(), set(), set()] # to fill in with actual cards
 
 
 class Noble:
