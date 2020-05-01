@@ -27,26 +27,28 @@ GEM_TYPE_ALL_STR_DICT = {
     "yellow": "gold",
 }
 
+def is_joker(token_type_str: str) -> bool:
+    return token_type_str == "yellow"
 
 class GemType:
     """
     Hashable class representing the type of a gem.
 
-    >>> a = GemType("black")
-    >>> a.get_desc()
+    >>> gem_type_a = GemType("black")
+    >>> gem_type_a.get_desc()
     'black'
-    >>> a.get_desc_long()
+    >>> gem_type_a.get_desc_long()
     'black (onyx)'
-    >>> a.is_joker()
+    >>> gem_type_a.is_joker()
     False
     
-    >>> b = GemType("black")
-    >>> c = GemType("yellow")
-    >>> a == b
+    >>> gem_type_b = GemType("black")
+    >>> gem_type_c = GemType("yellow")
+    >>> gem_type_a == gem_type_b
     True
-    >>> a == c
+    >>> gem_type_a == gem_type_c
     False
-    >>> c.is_joker()
+    >>> gem_type_c.is_joker()
     True
     """
 
@@ -68,7 +70,7 @@ class GemType:
         return self.get_desc()
 
     def get_desc(self) -> str:
-        return f"{self.t}"
+        return self.t
 
     def get_desc_long(self) -> str:
         retstr = ""
@@ -84,17 +86,17 @@ class DevCardType(GemType):
     """
     Hashable class representing the type of a development card.  Inherits from GemType.
 
-    >>> a = DevCardType("black")
-    >>> a.get_desc()
+    >>> dev_card_type_a = DevCardType("black")
+    >>> dev_card_type_a.get_desc()
     'black'
-    >>> a.get_desc_long()
+    >>> dev_card_type_a.get_desc_long()
     'black (onyx)'
     
-    >>> b = DevCardType("black")
-    >>> c = DevCardType("blue")
-    >>> a == b
+    >>> dev_card_type_b = DevCardType("black")
+    >>> dev_card_type_c = DevCardType("blue")
+    >>> dev_card_type_a == dev_card_type_b
     True
-    >>> a == c
+    >>> dev_card_type_a == dev_card_type_c
     False
     """
 
@@ -105,11 +107,11 @@ class DevCard:
     """
     A particular instance of a development card.  Includes level (1, 2, or 3), type, points (>= 0), and cost.
 
-    >>> a = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
-    >>> a.__str__()
+    >>> dev_card = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> dev_card.__str__()
     "l1p2black/{'blue': 2, 'red': 1}"
 
-    >>> a.get_cost_str()
+    >>> dev_card.get_cost_str()
     "{'blue': 2, 'red': 1}"
     """
 
@@ -152,38 +154,38 @@ class DevCardCache:
     >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
     >>> dc2 = DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
     >>> dc3 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
-    >>> a = DevCardCache()
-    >>> a.__str__()
+    >>> dev_card_cache = DevCardCache()
+    >>> dev_card_cache.__str__()
     'Dev cards on hand: {}'
 
-    >>> a.add(dc1)
-    >>> a.__str__()
+    >>> dev_card_cache.add(dc1)
+    >>> dev_card_cache.__str__()
     'Dev cards on hand: {"black": 1}'
-    >>> a.add(dc2)
-    >>> a.__str__()
+    >>> dev_card_cache.add(dc2)
+    >>> dev_card_cache.__str__()
     'Dev cards on hand: {"black": 2}'
-    >>> a.add(dc3)
-    >>> a.__str__()
+    >>> dev_card_cache.add(dc3)
+    >>> dev_card_cache.__str__()
     'Dev cards on hand: {"black": 2, "blue": 1}'
 
-    >>> a.calc_ppoints()
+    >>> dev_card_cache.calc_ppoints()
     3
 
-    >>> a.calc_discount(DevCardType("black"))
+    >>> dev_card_cache.calc_discount(DevCardType("black"))
     2
-    >>> a.calc_discount(DevCardType("blue"))
+    >>> dev_card_cache.calc_discount(DevCardType("blue"))
     1
-    >>> a.calc_discount(DevCardType("red"))
+    >>> dev_card_cache.calc_discount(DevCardType("red"))
     0
 
-    >>> a.remove(dc1)
-    >>> a.__str__()
+    >>> dev_card_cache.remove(dc1)
+    >>> dev_card_cache.__str__()
     'Dev cards on hand: {"black": 1, "blue": 1}'
-    >>> a.remove(dc1)
+    >>> dev_card_cache.remove(dc1)
     Traceback (most recent call last):
     Exception: cannot remove card from DevCardCache: card not found
     >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
-    >>> a.remove(dc4)
+    >>> dev_card_cache.remove(dc4)
     Traceback (most recent call last):
     Exception: cannot remove card from DevCardCache: card not found
 
@@ -280,41 +282,41 @@ class DevCardReserve:
     >>> dc3 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
     >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
 
-    >>> a = DevCardReserve()
-    >>> a.add(dc1)
-    >>> a.count()
+    >>> dev_card_reserve = DevCardReserve()
+    >>> dev_card_reserve.add(dc1)
+    >>> dev_card_reserve.count()
     1
-    >>> a.__str__()
+    >>> dev_card_reserve.__str__()
     "Dev cards in reserve (1):\\nl1p2black/{'blue': 2, 'red': 1}"
-    >>> a.add(dc2)
-    >>> a.count()
+    >>> dev_card_reserve.add(dc2)
+    >>> dev_card_reserve.count()
     2
-    >>> a.is_max()
+    >>> dev_card_reserve.is_max()
     False
-    >>> a.can_action_reserve()
+    >>> dev_card_reserve.can_action_reserve()
     True
 
-    >>> a.add(dc3)
-    >>> a.count()
+    >>> dev_card_reserve.add(dc3)
+    >>> dev_card_reserve.count()
     3
-    >>> a.is_max()
+    >>> dev_card_reserve.is_max()
     True
-    >>> a.can_action_reserve()
+    >>> dev_card_reserve.can_action_reserve()
     False
 
-    >>> a.add(dc4)
+    >>> dev_card_reserve.add(dc4)
     Traceback (most recent call last):
     Exception: cannot add card to DevCardReserve: at max
-    >>> a.count()
+    >>> dev_card_reserve.count()
     3
 
-    >>> a.remove(dc3)
-    >>> a.count()
+    >>> dev_card_reserve.remove(dc3)
+    >>> dev_card_reserve.count()
     2
-    >>> a.remove(dc4)
+    >>> dev_card_reserve.remove(dc4)
     Traceback (most recent call last):
     Exception: cannot remove card from DevCardReserve: not found
-    >>> a.count()
+    >>> dev_card_reserve.count()
     2
     """
 
@@ -386,41 +388,41 @@ class DevCardDeck:
     >>> dc5 = DevCard(level=1, t=DevCardType("red"), ppoints=0, cost={"red": 1, "green": 3})
     >>> dc6 = DevCard(level=1, t=DevCardType("white"), ppoints=0, cost={"white": 1, "green": 3})
 
-    >>> a = DevCardDeck(1, [dc0, dc1, dc2, dc3, dc4, dc5, dc6])
-    >>> a.get_level()
+    >>> dev_card_deck = DevCardDeck(1, [dc0, dc1, dc2, dc3, dc4, dc5, dc6])
+    >>> dev_card_deck.get_level()
     1
-    >>> len(a.get_list())
+    >>> len(dev_card_deck.get_list())
     7
-    >>> a.count()
+    >>> dev_card_deck.count()
     7
-    >>> a.get_facing() == [dc0, dc1, dc2, dc3]
+    >>> dev_card_deck.get_facing() == [dc0, dc1, dc2, dc3]
     True
-    >>> a.is_empty()
+    >>> dev_card_deck.is_empty()
     False
-    >>> a.is_hidden_empty()
+    >>> dev_card_deck.is_hidden_empty()
     False
 
-    >>> a.pop_by_idx(2) == dc2
+    >>> dev_card_deck.pop_by_idx(2) == dc2
     True
-    >>> a.count()
+    >>> dev_card_deck.count()
     6
-    >>> a.get_facing() == [dc0, dc1, dc3, dc4]
+    >>> dev_card_deck.get_facing() == [dc0, dc1, dc3, dc4]
     True
 
-    >>> a.pop_hidden_card() == dc5
+    >>> dev_card_deck.pop_hidden_card() == dc5
     True
-    >>> a.count()
+    >>> dev_card_deck.count()
     5
-    >>> a.is_hidden_empty()
+    >>> dev_card_deck.is_hidden_empty()
     False
-    >>> a.get_facing() == [dc0, dc1, dc3, dc4]
+    >>> dev_card_deck.get_facing() == [dc0, dc1, dc3, dc4]
     True
 
-    >>> a.pop_hidden_card() == dc6
+    >>> dev_card_deck.pop_hidden_card() == dc6
     True
-    >>> a.is_hidden_empty()
+    >>> dev_card_deck.is_hidden_empty()
     True
-    >>> a.is_empty()
+    >>> dev_card_deck.is_empty()
     False
     """
 
@@ -502,10 +504,10 @@ class Noble:
     """
     A Noble.
 
-    >>> a = Noble(3, {'black': 4, 'white': 4})
-    >>> a.get_ppoints()
+    >>> noble = Noble(3, {'black': 4, 'white': 4})
+    >>> noble.get_ppoints()
     3
-    >>> a.get_cost() == {'black': 4, 'white': 4}
+    >>> noble.get_cost() == {'black': 4, 'white': 4}
     True
     """
 
@@ -541,8 +543,8 @@ class NoblesInPlay:
     >>> n1 = Noble(3, {'black': 4, 'white': 4})
     >>> n2 = Noble(3, {'black': 3, 'white': 3, 'blue': 3})
     >>> n3 = Noble(3, {'black': 4, 'green': 4})
-    >>> a = NoblesInPlay(set((n1, n2, n3)))
-    >>> a.count()
+    >>> nobles_in_play = NoblesInPlay(set((n1, n2, n3)))
+    >>> nobles_in_play.count()
     3
     """
 
@@ -569,17 +571,17 @@ class TokenType(GemType):
     """
     Hashable class representing the type of a token.  Inherits from GemType.
 
-    >>> a = TokenType("black")
-    >>> a.get_desc()
+    >>> token_type_a = TokenType("black")
+    >>> token_type_a.get_desc()
     'black'
-    >>> a.get_desc_long()
+    >>> token_type_a.get_desc_long()
     'black (onyx)'
     
-    >>> b = TokenType("black")
-    >>> c = TokenType("blue")
-    >>> a == b
+    >>> token_type_b = TokenType("black")
+    >>> token_type_c = TokenType("blue")
+    >>> token_type_a == token_type_b
     True
-    >>> a == c
+    >>> token_type_a == token_type_c
     False
     """
 
@@ -590,26 +592,35 @@ class Token:
     """
     A token.
 
-    >>> a = Token("black")
-    >>> a.__str__()
+    >>> token = Token("black")
+    >>> token.__str__()
     'black'
     """
 
-    t: TokenType
+    tt: TokenType
     image: bytes
 
     def __init__(self, token_type_str: str, image: bytes = None) -> None:
-        self.t = TokenType(token_type_str)
+        """
+        Init a Token from a string describing the TokenType.
+        """
+        self.tt = TokenType(token_type_str)
         self.image = image
 
-    def get_type(self) -> TokenType:
-        return self.t.get_type()
+    def get_token_type(self) -> TokenType:
+        return self.tt
+    
+    def get_type(self) -> str:
+        return self.tt.get_type()
+    
+    def get_type_str(self) -> str:
+        return self.get_type()
 
     def is_joker(self) -> bool:
-        return self.t.is_joker()
+        return self.tt.is_joker()
 
     def __str__(self) -> str:
-        return self.t.__str__()
+        return self.tt.__str__()
 
         #    get_image() -> bytes
 
@@ -622,39 +633,39 @@ class TokenCache:
     >>> t1 = Token("black")
     >>> t2 = Token("yellow")
     >>> t3 = Token("blue")
-    >>> a = TokenCache(set((t0, t1, t2, t3)))
+    >>> token_cache = TokenCache(set((t0, t1, t2, t3)))
     
-    >>> a.count()
+    >>> token_cache.count()
     4
-    >>> a.count_type(TokenType("black"))
+    >>> token_cache.count_type("black")
     2
-    >>> a.count_type(TokenType("red"))
+    >>> token_cache.count_type("red")
     0
-    >>> a.is_type_empty(TokenType("black"))
+    >>> token_cache.is_type_empty("black")
     False
-    >>> a.is_type_empty(TokenType("red"))
+    >>> token_cache.is_type_empty("red")
     True
 
     >>> t4 = Token("black")
     >>> t5 = Token("red")
-    >>> a.add(t4)
-    >>> a.add(t5)
-    >>> a.count()
+    >>> token_cache.add(t4)
+    >>> token_cache.add(t5)
+    >>> token_cache.count()
     6
-    >>> a.count_type(TokenType("black"))
+    >>> token_cache.count_type("black")
     3
-    >>> a.is_type_empty(TokenType("red"))
+    >>> token_cache.is_type_empty("red")
     False
 
-    >>> a.remove(TokenType("yellow"))
-    >>> a.count()
+    >>> token_cache.remove("yellow")
+    >>> token_cache.count()
     5
-    >>> a.count_type(TokenType("yellow"))
+    >>> token_cache.count_type("yellow")
     0
-    >>> a.remove(TokenType("yellow")) #doctest: +ELLIPSIS
+    >>> token_cache.remove("yellow") #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception:...
-    >>> a.count()
+    >>> token_cache.count()
     5
     """
 
@@ -663,21 +674,29 @@ class TokenCache:
     def __init__(self, s: Set[Token] = set()) -> None:
         self.d = {}
         for item in s:
-            self.d[item.t] = self.d.setdefault(item.t, 0) + 1
+            self.d[item.get_token_type()] = self.d.setdefault(item.get_token_type(), 0) + 1
 
     def empty(self) -> None:
         self.d = {}
 
     def add(self, token: Token) -> None:
-        self.d[token.t] = self.d.setdefault(token.t, 0) + 1
+        """
+        Add (by Token, not by a string describing a token).
+        """
+        token_type = token.get_token_type()
+        self.d[token_type] = self.d.setdefault(token_type, 0) + 1
 
-    def remove(self, token_type: TokenType, how_many: int = 1) -> None:
+    def remove(self, token_type_str: str, how_many: int = 1) -> None:
+        """
+        Remove tokens from this cache, by a string describing a token type.
+        """
+        token_type = TokenType(token_type_str)
         if self.d.get(token_type) and self.d.get(token_type) >= how_many:
             self.d[token_type] -= how_many
             return
         else:
             raise Exception(
-                f"{how_many} of token type {token_type} not found in token cache"
+                f"{how_many} of token type {token_type_str} not found in token cache"
             )
 
     def count(self) -> int:
@@ -692,14 +711,16 @@ class TokenCache:
         """
         return self.count()
 
-    def count_type(self, token_type: TokenType) -> int:
+    def count_type(self, token_type_str: str) -> int:
+        token_type = TokenType(token_type_str)
         count = self.d.get(token_type)
         if count:
             return count
         else:
             return 0
 
-    def is_type_empty(self, token_type: TokenType) -> bool:
+    def is_type_empty(self, token_type_str: str) -> bool:
+        token_type = TokenType(token_type_str)
         if not self.d.get(token_type) or self.d.get(token_type) < 0:
             return True
         return False
@@ -712,60 +733,60 @@ class PlayerTokenCache(TokenCache):
     """
     The set of tokens currently held by a player.
     
-    >>> a = PlayerTokenCache()
-    >>> a.count()
+    >>> player_token_cache = PlayerTokenCache()
+    >>> player_token_cache.count()
     0
-    >>> a.count_type(TokenType("black"))
+    >>> player_token_cache.count_type("black")
     0
 
-    >>> a.add(Token("black"))
-    >>> a.add(Token("black"))
-    >>> a.add(Token("black"))
-    >>> a.add(Token("black"))
-    >>> a.add(Token("black"))
-    >>> a.add(Token("red"))
-    >>> a.add(Token("red"))
-    >>> a.add(Token("red"))
-    >>> a.add(Token("blue"))
-    >>> a.count()
+    >>> player_token_cache.add(Token("black"))
+    >>> player_token_cache.add(Token("black"))
+    >>> player_token_cache.add(Token("black"))
+    >>> player_token_cache.add(Token("black"))
+    >>> player_token_cache.add(Token("black"))
+    >>> player_token_cache.add(Token("red"))
+    >>> player_token_cache.add(Token("red"))
+    >>> player_token_cache.add(Token("red"))
+    >>> player_token_cache.add(Token("blue"))
+    >>> player_token_cache.count()
     9
-    >>> a.count_type(TokenType("black"))
+    >>> player_token_cache.count_type("black")
     5
-    >>> a.count_type(TokenType("red"))
+    >>> player_token_cache.count_type("red")
     3
-    >>> a.is_type_empty(TokenType("black"))
+    >>> player_token_cache.is_type_empty("black")
     False
-    >>> a.is_type_empty(TokenType("white"))
+    >>> player_token_cache.is_type_empty("white")
     True
-    >>> a.is_max()
+    >>> player_token_cache.is_max()
     False
-    >>> a.is_over_max()
+    >>> player_token_cache.is_over_max()
     False
 
-    >>> a.add(Token("red"))
-    >>> a.count() == PLAYER_TOKEN_CACHE_MAX
+    >>> player_token_cache.add(Token("red"))
+    >>> player_token_cache.count() == PLAYER_TOKEN_CACHE_MAX
     True
-    >>> a.is_max()
+    >>> player_token_cache.is_max()
     True
-    >>> a.is_over_max()
+    >>> player_token_cache.is_over_max()
     False
-    >>> a.add(Token("red"))
-    >>> a.count() == PLAYER_TOKEN_CACHE_MAX + 1
+    >>> player_token_cache.add(Token("red"))
+    >>> player_token_cache.count() == PLAYER_TOKEN_CACHE_MAX + 1
     True
-    >>> a.is_max()
+    >>> player_token_cache.is_max()
     False
-    >>> a.is_over_max()
+    >>> player_token_cache.is_over_max()
     True
 
-    >>> a.remove(TokenType("red"))
-    >>> a.count()
+    >>> player_token_cache.remove("red")
+    >>> player_token_cache.count()
     10
-    >>> a.count_type(TokenType("red"))
+    >>> player_token_cache.count_type("red")
     4
-    >>> a.remove(TokenType("yellow")) #doctest: +ELLIPSIS
+    >>> player_token_cache.remove("yellow") #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception:...
-    >>> a.count()
+    >>> player_token_cache.count()
     10
     """
 
@@ -787,7 +808,7 @@ class PlayerTokenCache(TokenCache):
         """
         cost_dict = dev_card.get_cost_dict()
         for typ_str in cost_dict.keys():
-            if cost_dict[typ_str] > self.count_type(TokenType(typ_str)):
+            if cost_dict[typ_str] > self.count_type(typ_str):
                 return False
         return True
 
@@ -801,7 +822,7 @@ class PlayerTokenCache(TokenCache):
             raise Exception(f"insufficient tokens to purchase dev card {dev_card}")
         cost_dict = dev_card.get_cost_dict()
         for typ_str in cost_dict.keys():
-            self.remove(TokenType(typ_str), cost_dict[typ_str])
+            self.remove(typ_str, cost_dict[typ_str])
         return
 
 
@@ -813,32 +834,32 @@ class GameTokenCache(TokenCache):
     """
     The set of tokens available within a game.  The initial counts depend on the number of players.
     
-    >>> a = GameTokenCache(players_count=2)
-    >>> a.count()
+    >>> game_token_cache = GameTokenCache(players_count=2)
+    >>> game_token_cache.count()
     25
-    >>> a.count_type(TokenType("black"))
+    >>> game_token_cache.count_type("black")
     4
-    >>> a.count_type(TokenType("yellow"))
+    >>> game_token_cache.count_type("yellow")
     5
 
-    >>> a.remove(TokenType("red"))
-    >>> a.count_type(TokenType("red"))
+    >>> game_token_cache.remove("red")
+    >>> game_token_cache.count_type("red")
     3
-    >>> a.is_type_empty(TokenType("red"))
+    >>> game_token_cache.is_type_empty("red")
     False
-    >>> a.remove(TokenType("red"))
-    >>> a.remove(TokenType("red"))
-    >>> a.remove(TokenType("red"))
-    >>> a.count_type(TokenType("red"))
+    >>> game_token_cache.remove("red")
+    >>> game_token_cache.remove("red")
+    >>> game_token_cache.remove("red")
+    >>> game_token_cache.count_type("red")
     0
-    >>> a.is_type_empty(TokenType("red"))
+    >>> game_token_cache.is_type_empty("red")
     True
-    >>> a.remove(TokenType("red")) #doctest: +ELLIPSIS
+    >>> game_token_cache.remove("red") #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception:...
 
-    >>> a.add(Token("red"))
-    >>> a.count_type(TokenType("red"))
+    >>> game_token_cache.add(Token("red"))
+    >>> game_token_cache.count_type("red")
     1
     """
 
@@ -857,4 +878,3 @@ class GameTokenCache(TokenCache):
     # def can_action_take_two_tokens(token_types_set: Set[TokenType]) -> bool
 
 
-WINNING_SCORE = 15

@@ -7,11 +7,11 @@ from core import (
     DevCardCache,
     DevCardReserve,
     DevCardType,
+    is_joker,
     PlayerTokenCache,
+    PLAYER_TOKEN_CACHE_MAX,
     Token,
     TokenType,
-    PLAYER_TOKEN_CACHE_MAX,
-    WINNING_SCORE,
 )
 
 from copy import deepcopy
@@ -43,9 +43,6 @@ class PlayerState:
 
     >>> a.calc_score()
     3
-
-    >>> a.is_winning_state()
-    False
 
     >>> b = a.copy()
     >>> a.calc_score() == b.calc_score()
@@ -94,8 +91,8 @@ class PlayerState:
     def calc_score(self) -> int:
         return self.dev_card_cache.calc_ppoints()
 
-    def is_winning_state(self) -> bool:
-        return self.calc_score() >= WINNING_SCORE
+    #def is_winning_state(self) -> bool:
+    #    return self.calc_score() >= WINNING_SCORE
 
     def __str__(self) -> str:
         ret = ""
@@ -270,23 +267,20 @@ class Player:
 
     >>> player_a.get_current_token_cache().size()
     4
-    >>> player_a.action_take_three_tokens(Token("black"), Token("blue"), Token("green"))
+    >>> player_a.action_take_three_tokens("black", "blue", "green")
     >>> player_a.get_current_token_cache().size()
     7
-    >>> player_a.action_take_three_tokens(Token("black"), Token("black"), Token("green")) #doctest: +ELLIPSIS
+    >>> player_a.action_take_three_tokens("black", "black", "green") #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception...
-    >>> player_a.action_take_three_tokens(Token("black"), Token("yellow"), Token("green")) #doctest: +ELLIPSIS
+    >>> player_a.action_take_three_tokens("black", "yellow", "green") #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception...
 
-    >>> player_a.action_take_two_tokens(Token("red"), Token("red"))
+    >>> player_a.action_take_two_tokens("red")
     >>> player_a.get_current_token_cache().size()
     9
-    >>> player_a.action_take_two_tokens(Token("red"), Token("black")) #doctest: +ELLIPSIS
-    Traceback (most recent call last):
-    Exception...
-    >>> player_a.action_take_two_tokens(Token("yellow"), Token("yellow")) #doctest: +ELLIPSIS
+    >>> player_a.action_take_two_tokens("yellow") #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception...
 
@@ -358,7 +352,18 @@ class Player:
     def calc_score(self) -> int:
         return self.get_current_player_state().calc_score()
 
-    def _action_take_tokens(self, token_add_list) -> None:
+    def can_fit_tokens(
+            self,
+            number_of_tokens_to_add: int,
+            ) -> bool:
+        """
+        Return true if adding number_of_tokens_to_add will not exceed the player's max.
+        """
+        if number_of_tokens_to_add < 0:
+            raise Exception("number of tokens to add cannot be negative")
+        return self.get_gurrent_token_cache().count() + len(token_type_str_add_list) <= PLAYER_TOKEN_CACHE_MAX
+
+    def action_take_tokens(self, token_type_str_add_list) -> None:
         """
         Complete the player action of taking tokens.  
 
@@ -369,48 +374,54 @@ class Player:
         token_cache = self.get_current_token_cache()
 
         # if this player's TokenCache will overflow, raise Exception.
-        if token_cache.count() + len(token_add_list) > PLAYER_TOKEN_CACHE_MAX:
+        if not self.can_fit_tokens(len(token_type_str_add_list)):
             raise Exception(
-                f"not enough space in player's token cache to add {len(token_add_list)} tokens"
+                f"not enough space in player's token cache to add {len(token_type_add_list)} tokens"
             )
 
         # Create updated state including the updated token cache
-        for token_to_add in token_add_list:
-            token_cache.add(token_to_add)
+        for token_type_str_to_add in token_type_str_add_list:
+            token_cache.add(Token(token_type_str_to_add))
         new_state = clone_playerState_new_token_cache(
             self.get_current_player_state(), token_cache,
         )
         self.append_player_state(new_state)
         return
 
-    def action_take_three_tokens(self, token_1, token_2, token_3) -> None:
+    def action_take_three_tokens(
+            self, 
+            token_type_str_1: str, 
+            token_type_str_2: str, 
+            token_type_str_3: str,
+            ) -> None:
         """
         Complete the player action of taking three tokens.
 
-        This function makes sure that the tokens are all of different type, and that none are yellow.
+        This function makes sure that the tokens are all of different type, and that none are yellow (jokers).
         """
         if (
-            token_1.get_type() == token_2.get_type()
-            or token_1.get_type() == token_3.get_type()
-            or token_2.get_type() == token_3.get_type()
+            token_type_str_1 == token_type_str_2
+            or token_type_str_1 == token_type_str_3
+            or token_type_str_2 == token_type_str_3
         ):
             raise Exception("action not allowed: chosen tokens must be all different")
-        if token_1.is_joker() or token_2.is_joker() or token_3.is_joker():
+        if is_joker(token_type_str_1) or is_joker(token_type_str_2) or is_joker(token_type_str_3):
             raise Exception("action not allowed: chosen tokens must not be jokers")
 
-        return self._action_take_tokens([token_1, token_2, token_3])
+        return self.action_take_tokens([token_type_str_1, token_type_str_2, token_type_str_3])
 
-    def action_take_two_tokens(self, token_1, token_2) -> None:
+    def action_take_two_tokens(
+            self, 
+            token_type_str: str, 
+            ) -> None:
         """
         Complete the player action of taking two tokens.
         
-        This function makes sure that the tokens are of the same type, and that none are yellow.
+        This function makes sure that none are yellow (jokers).
         """
-        if token_1.get_type() != token_2.get_type():
-            raise Exception("action not allowed: chosen tokens must be the same")
-        if token_1.is_joker() or token_2.is_joker():
+        if is_joker(token_type_str):
             raise Exception("action not allowed: chosen tokens must not be jokers")
-        return self._action_take_tokens([token_1, token_2])
+        return self.action_take_tokens([token_type_str, token_type_str])
 
     def action_reserve_dev_card(self, dev_card_to_add) -> None:
         """
