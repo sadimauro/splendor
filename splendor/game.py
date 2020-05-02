@@ -193,7 +193,64 @@ class GameStateHistory:
             )
         self.l = self.l[0:state_no]
         return
-  
+ 
+def clone_gameState_new_dev_card_deck(
+    old_game_state: GameState, 
+    new_deck_no: int,
+    new_dev_card_deck: DevCardDeck,
+) -> GameState:
+    """
+    Create a new GameState from an existing one but using the updated
+    DevCardDeck.
+    """
+    ret = old_game_state.copy()
+    ret.set_dev_card_deck(new_deck_no, new_dev_card_deck)
+    return ret
+
+def clone_gameState_new_nobles_in_play(
+        old_game_state: GameState, 
+        new_nobles_in_play: NoblesInPlay,
+) -> GameState:
+    """
+    Create a new GameState from an existing one but using the updated
+    NoblesInPlay.
+    """
+    ret = old_game_state.copy()
+    ret.set_nobles_in_play(new_nobles_in_play)
+    return ret
+
+def clone_gameState_new_token_cache(
+    old_game_state: GameState, 
+    new_token_cache: GameTokenCache
+) -> GameState:
+    """
+    Create a new GameState from an existing one but using the updated
+    TokenCache.
+    """
+    ret = old_game_state.copy()
+    ret.set_token_cache(new_token_cache)
+    return ret
+
+def clone_gameState(
+    old_game_state: GameState,
+    new_deck_no: int = 0,
+    new_dev_card_deck: DevCardDeck = None,
+    new_nobles_in_play: NoblesInPlay = None,
+    new_token_cache: GameTokenCache = None,
+) -> GameState:
+    """
+    Create a new GameState from an existing one but using the updated
+    TokenCache, DevCardCache, and/or DevCardReserve (any or all can be None).
+    """
+    ret = old_game_state.copy()
+    if new_dev_card_deck and new_deck_no != 0:
+        ret.set_dev_card_deck(new_deck_no, new_dev_card_deck)
+    if new_nobles_in_play:
+        ret.set_nobles_in_play(new_nobles_in_play)
+    if new_token_cache:
+        ret.set_token_cache(new_token_cache)
+    return ret
+ 
 
 class Game:
     """
@@ -242,7 +299,6 @@ class Game:
 
     def play(self) -> None:
         pass
-
 
     def action_take_three_tokens(
             self,
@@ -343,13 +399,85 @@ class Game:
         self.append_game_state(new_state)
         return
 
-    def action_reserve(self) -> None:
+    def action_reserve_dev_card(
+            self,
+            player: Player,
+            dev_card: DevCard, # instead of dev_card, args could include deck_no and idx into deck
+            ) -> None:
         """
+        Complete the action of a player reserving a dev card.
         """
-        pass
+        # make sure player isn't over his/her max tokens and reserve cards
+        if player.get_dev_card_reserve().is_max():
+            raise Exception(f"player at max reserve cards")
 
-    def action_purchase(self) -> None:
+        if not player.can_fit_tokens(1):
+            raise Exception(
+                f"not enough space in player's token cache to add 1 token"
+            )
+            # instead of above, we need to allow the player to get rid of some of his/her current tokens
+        
+        current_game_state = self.get_current_game_state()
+        dev_card_level = dev_card.get_level()
+        dev_card_deck = current_game_state.get_dev_card_deck(dev_card_level))
+        
+        # make sure card actually exists in the deck
+        found_idx = dev_card_deck.find_card(dev_card)
+        if found_idx == -1:
+            raise Exception(f"could not find card in given deck")
+
+        # remove card from deck
+        # we ignore the return since we already have the card
+        # note that the popping essentially deals out a new facing card
+        dev_card_deck.pop_by_idx(found_idx)
+        new_state = close_gameState_new_dev_card_deck(
+                current_game_state,
+                dev_card_level,
+                dev_card_deck
+                )
+        self.append_game_state(new_state)
+
+        # add card to player's reserve, and yellow token to player's token cache
+        player.action_reserve_dev_card(dev_card)
+
+        return
+
+
+    def action_purchase_dev_card(
+            self,
+            player: Player,
+            dev_card: DevCard, # instead of dev_card, args could include deck_no and idx into deck
+            ) -> None:
         """
+        Complete the action of a player purchasing a dev card.
         """
-        pass
+
+        # make sure player has the required tokens to spend
+        # TODO: handle use of jokers too
+        if not player.get_token_cache().can_purchase_dev_card(dev_card_to_add):
+            raise Exception(f"cannot purchase dev card: insufficient tokens")
+        
+        # make sure card actually exists in the deck
+        current_game_state = self.get_current_game_state()
+        dev_card_level = dev_card.get_level()
+        dev_card_deck = current_game_state.get_dev_card_deck(dev_card_level))
+        found_idx = dev_card_deck.find_card(dev_card)
+        if found_idx == -1:
+            raise Exception(f"could not find card in given deck")
+
+        # remove card from deck
+        # we ignore the return since we already have the card
+        # note that the popping essentially deals out a new facing card
+        dev_card_deck.pop_by_idx(found_idx)
+        new_state = close_gameState_new_dev_card_deck(
+                current_game_state,
+                dev_card_level,
+                dev_card_deck
+                )
+        self.append_game_state(new_state)
+
+        # add card to player's dev card cache
+        player.action_purchase_dev_card(dev_card)
+
+        return
 

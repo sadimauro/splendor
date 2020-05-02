@@ -137,6 +137,14 @@ class DevCard:
     def get_cost_str(self) -> str:
         return self.cost.__str__()
 
+    def __eq__(self, other) -> bool:
+        return (
+                self.level == other.level
+                and self.t == other.t
+                and self.ppoints == other.ppoints
+                and self.cost == other.cost
+                )
+
     def __str__(self) -> str:
         return f"l{self.level}p{self.ppoints}{self.t.__str__()}/{self.get_cost_str()}"
 
@@ -453,6 +461,15 @@ class DevCardDeck:
     def shuffle(self) -> None:
         random.shuffle(self.l)
         return
+
+    def find_card(self, card_seeking: DevCard) -> int:
+        """
+        Find dev_card within this deck; return its index or -1 if not found.
+        """
+        for idx in range(len(self.l)): 
+            if self.l[idx] == card_seeking:
+                return idx
+        return -1
 
     def pop_by_idx(self, idx: int) -> DevCard:
         """
@@ -799,6 +816,12 @@ class PlayerTokenCache(TokenCache):
         if self.count() > PLAYER_TOKEN_CACHE_MAX:
             return True
         return False
+
+    def count_until_max(self) -> int:
+        """
+        Return the number of token "space" within this cache.
+        """
+        return PLAYER_TOKEN_CACHE_MAX - self.count()
 
     def can_purchase_dev_card(self, dev_card) -> bool:
         """

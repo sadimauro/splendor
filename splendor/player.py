@@ -423,24 +423,32 @@ class Player:
             raise Exception("action not allowed: chosen tokens must not be jokers")
         return self.action_take_tokens([token_type_str, token_type_str])
 
-    def action_reserve_dev_card(self, dev_card_to_add) -> None:
+    def action_reserve_dev_card(self, dev_card_to_add: DevCard) -> None:
         """
         Complete the player action of reserving a development card.
 
-        This functions makes sure that the player has ample room is his/her cache to fit the card.
+        This functions makes sure that the player has ample room is his/her caches to fit the card and yellow token.
         """
-        dev_card_reserve = self.get_current_dev_card_reserve()
-
         # if this player's DevCardReserve will overflow, raise Exception.
+        dev_card_reserve = self.get_current_dev_card_reserve()
         if dev_card_reserve.is_max():
             raise Exception(
                 f"not enough space in player's dev card reserve to add a card"
             )
 
+        # if this player's token cache will overflow, raise an exception.
+        # TODO: handle this better.
+        token_cache = self.get_current_token_cache()
+        if token_cache.count_until_max() < 1:
+            raise Exception(f"not enough space in this player's token cache to add a token")
+
         # Create updated state including the updated token cache
         dev_card_reserve.add(dev_card_to_add)
-        new_state = clone_playerState_new_dev_card_reserve(
-            self.get_current_player_state(), dev_card_reserve,
+        token_cache.add("yellow")
+        new_state = clone_playerState(
+            self.get_current_player_state(), 
+            new_dev_card_reserve=dev_card_reserve,
+            new_token_cache=token_cache,
         )
         self.append_player_state(new_state)
         return
