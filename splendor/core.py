@@ -52,34 +52,31 @@ class GemType:
     True
     """
 
-    t: str
+    desc: str
 
-    def __init__(self, t: str,) -> None:
-        self.t = t
+    def __init__(self, desc: str,) -> None:
+        self.desc = desc
 
     def __eq__(self, other) -> bool:
-        return self.t == other.t
+        return self.desc == other.desc
 
     def __hash__(self) -> int:
-        return hash(self.t)
+        return hash(self.desc)
 
     def __str__(self) -> str:
         return self.get_desc()
 
-    def get_type(self) -> str:
-        return self.get_desc()
-
     def get_desc(self) -> str:
-        return self.t
+        return self.desc
 
     def get_desc_long(self) -> str:
         retstr = ""
-        retstr += f"{self.t} "
-        retstr += f"({GEM_TYPE_ALL_STR_DICT.get(self.t)})"
+        retstr += f"{self.desc} "
+        retstr += f"({GEM_TYPE_ALL_STR_DICT.get(self.desc)})"
         return retstr
 
     def is_joker(self) -> bool:
-        return self.get_type() == "yellow"
+        return self.get_desc() == "yellow"
 
 
 class DevCardType(GemType):
@@ -131,6 +128,9 @@ class DevCard:
     # def is_purchasable(dev_card_cache: DevCardCache, token_player_cache: TokenPlayerCache) -> bool:
     #    pass
 
+    def get_type(self) -> DevCardType:
+        return self.t
+
     def get_cost_dict(self) -> Dict[str, int]:
         return self.cost
 
@@ -144,6 +144,9 @@ class DevCard:
                 and self.ppoints == other.ppoints
                 and self.cost == other.cost
                 )
+
+#    def __hash__(self) -> int:
+#        return hash((self.level, self.t, self.ppoints, self.cost))                
 
     def __str__(self) -> str:
         return f"l{self.level}p{self.ppoints}{self.t.__str__()}/{self.get_cost_str()}"
@@ -199,28 +202,32 @@ class DevCardCache:
 
     """
 
-    d: Dict[DevCardType, Set[DevCard]]
+    d: Dict[DevCardType, List[DevCard]]
 
     def __init__(self):
         self.d = {}
 
     def add(self, dev_card: DevCard,) -> None:
-        if self.d.get(dev_card.t) is None:
+        dc_type = dev_card.get_type()
+        if self.d.get(dc_type) is None:
             logging.debug("creating new key within self.d")
-            self.d[dev_card.t] = set()
+            self.d[dc_type] = list()
         logging.debug("adding card to self.d")
-        self.d[dev_card.t].add(dev_card)
+        self.d[dc_type].append(dev_card)
         return
 
     def remove(self, dev_card: DevCard) -> None:
         """
         Remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.
         """
-        if dev_card.t not in self.d.keys():
+        dc_type = dev_card.get_type()
+        if dc_type not in self.d.keys():
             raise Exception("cannot remove card from DevCardCache: card not found")
         try:
-            self.d.get(dev_card.t).remove(dev_card)
+            self.d.get(dc_type).remove(dev_card)
         except KeyError:
+            raise Exception("cannot remove card from DevCardCache: type not found")
+        except ValueError:
             raise Exception("cannot remove card from DevCardCache: card not found")
         except Exception as e:
             raise Exception(f"cannot remove card from DevCardCache: {e}")
@@ -321,24 +328,24 @@ class DevCardReserve:
     >>> dev_card_reserve.remove(dc3)
     >>> dev_card_reserve.count()
     2
-    >>> dev_card_reserve.remove(dc4)
+    >>> dev_card_reserve.remove(dc4) #doctest: +ELLIPSIS
     Traceback (most recent call last):
-    Exception: cannot remove card from DevCardReserve: not found
+    ValueError:...
     >>> dev_card_reserve.count()
     2
     """
 
-    s: Set[DevCard]
+    s: List[DevCard]
 
-    def __init__(self, s: Set[DevCard] = None) -> None:
+    def __init__(self, s: List[DevCard] = None) -> None:
         if s is None:
-            s = set()
+            s = list()
         self.s = s
 
     def add(self, dev_card: DevCard) -> None:
         if self.is_max():
             raise Exception("cannot add card to DevCardReserve: at max")
-        self.s.add(dev_card)
+        self.s.append(dev_card)
         return
 
     def remove(self, dev_card: DevCard) -> None:

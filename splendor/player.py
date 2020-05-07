@@ -361,7 +361,7 @@ class Player:
         """
         if number_of_tokens_to_add < 0:
             raise Exception("number of tokens to add cannot be negative")
-        return self.get_gurrent_token_cache().count() + len(token_type_str_add_list) <= PLAYER_TOKEN_CACHE_MAX
+        return self.get_current_token_cache().count() + number_of_tokens_to_add <= PLAYER_TOKEN_CACHE_MAX
 
     def action_take_tokens(self, token_type_str_add_list) -> None:
         """

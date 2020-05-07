@@ -16,7 +16,7 @@ from core import (
 from player import (
         Player,
         )
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple
 
 PLAYERS_COUNT_MIN = 2
 PLAYERS_COUNT_MAX = 4
@@ -419,7 +419,7 @@ class Game:
         
         current_game_state = self.get_current_game_state()
         dev_card_level = dev_card.get_level()
-        dev_card_deck = current_game_state.get_dev_card_deck(dev_card_level))
+        dev_card_deck = current_game_state.get_dev_card_deck(dev_card_level)
         
         # make sure card actually exists in the deck
         found_idx = dev_card_deck.find_card(dev_card)
@@ -460,7 +460,7 @@ class Game:
         # make sure card actually exists in the deck
         current_game_state = self.get_current_game_state()
         dev_card_level = dev_card.get_level()
-        dev_card_deck = current_game_state.get_dev_card_deck(dev_card_level))
+        dev_card_deck = current_game_state.get_dev_card_deck(dev_card_level)
         found_idx = dev_card_deck.find_card(dev_card)
         if found_idx == -1:
             raise Exception(f"could not find card in given deck")
