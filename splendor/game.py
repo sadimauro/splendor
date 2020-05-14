@@ -14,6 +14,7 @@ from core import (
         Token,
         TokenType,
         )
+from game_setup import INITIAL_STATE
 from player import (
         Player,
         )
@@ -118,6 +119,47 @@ class GameState:
     def set_token_cache(self, new_token_cache: GameTokenCache) -> None:
         self.token_cache = new_token_cache
         return
+
+
+def generate_initial_game_state() -> GameState:
+    """
+    Generate the initial state of the game, i.e. shuffle and deal out the decks, set up the tokens, etc.
+    """
+    >>> dc0 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
+    >>> dc2 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc3 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc5 = DevCard(level=1, t=DevCardType("red"), ppoints=0, cost={"red": 1, "green": 3})
+    >>> dc6 = DevCard(level=1, t=DevCardType("white"), ppoints=0, cost={"white": 1, "green": 3})
+    >>> dev_card_deck_1 = DevCardDeck(1, [dc0, dc1, dc2, dc3, dc4, dc5, dc6])
+
+    >>> dc0 = DevCard(level=2, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> dc1 = DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
+    >>> dc2 = DevCard(level=2, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc3 = DevCard(level=2, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc4 = DevCard(level=2, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dev_card_deck_2 = DevCardDeck(2, [dc0, dc1, dc2, dc3, dc4])
+    
+    >>> dc0 = DevCard(level=3, t=DevCardType("black"), ppoints=4, cost={"blue": 2, "red": 5})
+    >>> dc1 = DevCard(level=3, t=DevCardType("black"), ppoints=5, cost={"blue": 6})
+    >>> dc2 = DevCard(level=3, t=DevCardType("blue"), ppoints=5, cost={"white": 3, "red": 5, "green": 3})
+    >>> dc3 = DevCard(level=3, t=DevCardType("red"), ppoints=4, cost={"white": 3, "red": 3, "green": 3})
+    >>> dc4 = DevCard(level=3, t=DevCardType("red"), ppoints=4, cost={"white": 3, "red": 3, "green": 3})
+    >>> dc5 = DevCard(level=3, t=DevCardType("red"), ppoints=5, cost={"red": 4, "green": 3})
+    >>> dc6 = DevCard(level=3, t=DevCardType("white"), ppoints=4, cost={"white": 5, "green": 3})
+    >>> dev_card_deck_3 = DevCardDeck(3, [dc0, dc1, dc2, dc3, dc4, dc5, dc6])
+
+    >>> n1 = Noble(3, {'black': 4, 'white': 4})
+    >>> n2 = Noble(3, {'black': 3, 'white': 3, 'blue': 3})
+    >>> n3 = Noble(3, {'black': 4, 'green': 4})
+    >>> n4 = Noble(3, {'white': 4, 'red': 4})
+    >>> nobles_in_play = NoblesInPlay(set((n1, n2, n3, n4)))
+
+    >>> game_token_cache = GameTokenCache(players_count=2)
+    
+    game_state = GameState(dev_card_deck_1, dev_card_deck_2, dev_card_deck_3, nobles_in_play, game_token_cache)
+    return game_state
 
 
 class GameStateHistory:
@@ -256,6 +298,23 @@ def clone_gameState(
 class Game:
     """
     A game.  Includes game states and players.
+
+    >>> game = Game(3)
+    >>> game.add_player(Player("Ava"))
+    >>> game.add_player(Player("Bernardo"))
+    >>> game.add_player(Player("Charlie"))
+    
+    >>> game.add_player(Player("Foo")) #doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    Exception...
+
+    >>> game.get_current_player_idx()
+    0
+    >>> game.set_current_player_by_name("Bernardo")
+    >>> game.get_current_player_idx()
+    1
+    >>> game.get_current_player().get_name()
+    'Bernardo'
     """
 
     number_of_players: int
@@ -272,12 +331,35 @@ class Game:
         self.players = list()
         self.current_player_idx = 0
         self.game_state_history = GameStateHistory()
+        self.game_state_history.append(INITIAL_STATE)
         self.round_number_idx = 0
         return
 
     def add_player(self, player: Player) -> None:
+        if len(self.players) + 1 > self.number_of_players:
+            raise Exception("already have enough players")
         self.players.append(player)
         return
+
+    def get_current_player_idx(self) -> int:
+        return self.current_player_idx
+
+    def get_current_player(self) -> Player:
+        return self.players[self.current_player_idx]
+
+    def set_current_player(self, player: Player) -> None:
+        for i in range(len(self.players)):
+            if self.players[i] == player:
+                self.current_player_idx = i
+                return
+        raise Exception(f"could not find player {player.get_name()}")
+
+    def set_current_player_by_name(self, player_name: str) -> None:
+        for i in range(len(self.players)):
+            if self.players[i].get_name() == player_name:
+                self.current_player_idx = i
+                return
+        raise Exception(f"could not find player {player_name}")
 
     def get_game_state_history(self) -> GameStateHistory:
         return self.game_state_history
