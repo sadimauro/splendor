@@ -10,6 +10,7 @@ from core import (
         GameTokenCache,
         Noble,
         NoblesInPlay,
+        PlayerTokenCache,
         Token,
         TokenType,
         )

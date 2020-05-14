@@ -270,6 +270,7 @@ class Player:
     >>> player_a.action_take_three_tokens("black", "blue", "green")
     >>> player_a.get_current_token_cache().size()
     7
+    
     >>> player_a.action_take_three_tokens("black", "black", "green") #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception...
@@ -277,18 +278,26 @@ class Player:
     Traceback (most recent call last):
     Exception...
 
+    >>> player_a.get_current_token_cache().size()
+    7
     >>> player_a.action_take_two_tokens("red")
     >>> player_a.get_current_token_cache().size()
     9
+    
     >>> player_a.action_take_two_tokens("yellow") #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception...
 
     >>> player_a.get_current_dev_card_reserve().size()
     2
+    >>> player_a.get_current_token_cache().size()
+    9
     >>> player_a.action_reserve_dev_card(DevCard(level=2, t=DevCardType("blue"), ppoints=0, cost={"white": 1, "red": 1, "green": 2}))
     >>> player_a.get_current_dev_card_reserve().size()
     3
+    >>> player_a.get_current_token_cache().size()
+    10
+    
     >>> player_a.action_reserve_dev_card(DevCard(level=1, t=DevCardType("red"), ppoints=2, cost={"white": 1, "red": 1, "green": 2})) #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception...
@@ -296,12 +305,13 @@ class Player:
     >>> player_a.get_current_dev_card_cache().size()
     3
     >>> player_a.get_current_token_cache().size()
-    9
+    10
     >>> player_a.action_purchase_dev_card(DevCard(level=1, t=DevCardType("blue"), ppoints=0, cost={"black": 2}))
     >>> player_a.get_current_dev_card_cache().size()
     4
     >>> player_a.get_current_token_cache().size()
-    7
+    8
+    
     >>> player_a.action_purchase_dev_card(DevCard(level=3, t=DevCardType("red"), ppoints=5, cost={"white": 4, "red": 4, "green": 4})) #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception...
@@ -444,7 +454,7 @@ class Player:
 
         # Create updated state including the updated token cache
         dev_card_reserve.add(dev_card_to_add)
-        token_cache.add("yellow")
+        token_cache.add(Token("yellow"))
         new_state = clone_playerState(
             self.get_current_player_state(), 
             new_dev_card_reserve=dev_card_reserve,
