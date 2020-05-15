@@ -6,6 +6,24 @@ from copy import deepcopy
 from core import DevCard, DevCardDeck, DevCardType, GameTokenCache, Noble, NoblesInPlay
 import random
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
+GAME_INTRO = (
+        """In Splendor, you take on the role of a rich merchant during the Renaissance.
+        You will use your resources to acquire mines, transportation methods, and artisans
+        who will allow you to turn raw gems into beautiful jewels.
+
+        During the game, the players take gem and gold tokens. With these tokens, they purchase development cards,
+        which are worth prestige points and/or bonuses. These bonuses allow players to purchase subsequent
+        development cards for a lesser cost. When a player has enough bonuses, they immediately receive a visit
+        from a noble (which is also worth prestige points).
+
+        As soon as a player reaches 15 prestige points, the current turn ends and the player
+        with the most prestige points is declared the winner."""
+        )
+
+# This object represents the actual level-1 Splendor game deck.
 DEV_CARD_DECK_1 = DevCardDeck(1, [
         DevCard(level=1, t=DevCardType("black"), ppoints=0, cost={"green": 1, "red": 3, "black": 1}),
         DevCard(level=1, t=DevCardType("black"), ppoints=0, cost={"green": 2, "red": 1}),
@@ -49,6 +67,7 @@ DEV_CARD_DECK_1 = DevCardDeck(1, [
         DevCard(level=1, t=DevCardType("white"), ppoints=1, cost={"green": 4}),
         ])
 
+# This object represents the actual level-2 Splendor game deck.
 DEV_CARD_DECK_2 = DevCardDeck(2, [
         DevCard(level=2, t=DevCardType("black"), ppoints=1, cost={"white": 3, "blue": 2, "green": 2}),
         DevCard(level=2, t=DevCardType("black"), ppoints=1, cost={"white": 3, "green": 3, "black": 2}),
@@ -82,6 +101,7 @@ DEV_CARD_DECK_2 = DevCardDeck(2, [
         DevCard(level=2, t=DevCardType("white"), ppoints=3, cost={"white": 6}),
         ])
 
+# This object represents the actual level-3 Splendor game deck.
 DEV_CARD_DECK_3 = DevCardDeck(3, [
         DevCard(level=3, t=DevCardType("black"), ppoints=3, cost={"white": 3, "blue": 3, "green": 5, "red": 3}),
         DevCard(level=3, t=DevCardType("black"), ppoints=4, cost={"green": 3, "red": 6, "black": 3}),
@@ -104,6 +124,8 @@ DEV_CARD_DECK_3 = DevCardDeck(3, [
         DevCard(level=3, t=DevCardType("white"), ppoints=4, cost={"white": 3, "red": 3, "black": 6}),
         DevCard(level=3, t=DevCardType("white"), ppoints=5, cost={"white": 3, "black": 7}),
         ])
+
+# This object represents the actual Splendor game nobles.
 NOBLES_ALL_LIST = [
         Noble(3, {'black': 3, 'blue': 3, 'white': 3}),
         Noble(3, {'black': 3, 'red': 3, 'green': 3}),
@@ -118,6 +140,9 @@ NOBLES_ALL_LIST = [
         ]
 
 def create_dev_card_deck_shuffled(deck_no: int) -> DevCardDeck:
+    """
+    Create a dev card deck of the specified level, by copying the actual deck and shuffling it.
+    """
     if deck_no == 1:
         dev_card_deck = deepcopy(DEV_CARD_DECK_1)
     elif deck_no == 2:
@@ -132,6 +157,7 @@ def create_dev_card_deck_shuffled(deck_no: int) -> DevCardDeck:
 
 def create_nobles_in_play_shuffled(players_count: int) -> NoblesInPlay:
     """
+    Shuffle the set of nobles and select some based on the number of players.
     """
     nobles_all = deepcopy(NOBLES_ALL_LIST)
     if players_count == 2:

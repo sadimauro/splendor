@@ -4,10 +4,10 @@ core.py - Core splendor classes/functions.  Used heavily by the other splendor m
 
 from enum import Enum
 import json
-import logging
 import random
 from typing import List, Dict, Set
 
+import logging
 logging.basicConfig(level=logging.INFO)
 
 GEM_TYPE_COMMON_STR_DICT = {
@@ -582,13 +582,10 @@ class NoblesInPlay:
 
     def __str__(self) -> str:
         retstr = ""
-        retstr += f"Nobles in play ({self.count()}):"
+        retstr += f"Nobles in play ({self.count()}):\n"
         for noble in self.s:
             retstr += noble.__str__() + "\n"
         return retstr
-
-
-# NOBLES_DECK = set(...) # to fill in with actual noble cards
 
 
 class TokenType(GemType):

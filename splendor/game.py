@@ -17,11 +17,23 @@ from core import (
 from game_setup import (
         create_dev_card_deck_shuffled,
         create_nobles_in_play_shuffled,
+        GAME_INTRO,
         )
+from interactive import (
+        prompt_number,
+        prompt_string,
+        prompt_yn,
+        )
+
 from player import (
         Player,
         )
 from typing import List, Dict, Set, Tuple
+
+import sys
+
+import logging
+logging.basicConfig(level=logging.INFO)
 
 PLAYERS_COUNT_MIN = 2
 PLAYERS_COUNT_MAX = 4
@@ -330,6 +342,10 @@ class Game:
             raise Exception("already have enough players")
         self.players.append(player)
         return
+    
+    def add_player_by_name(self, player_name: str) -> None:
+        self.add_player(Player(player_name))
+        return
 
     def get_current_player_idx(self) -> int:
         return self.current_player_idx
@@ -373,8 +389,15 @@ class Game:
     def get_round_number_idx(self) -> int:
         return self.round_number_idx
 
-    def play(self) -> None:
-        pass
+    def play(
+            self,
+            interactive=True,
+            ) -> None:
+        """
+        Play a game of Splendor.
+        """
+        
+
 
     def action_take_three_tokens(
             self,
@@ -518,7 +541,6 @@ class Game:
 
         return
 
-
     def action_purchase_dev_card(
             self,
             player: Player,
@@ -556,4 +578,39 @@ class Game:
         player.action_purchase_dev_card(dev_card)
 
         return
+
+
+def play_runner(
+        interactive=True,
+        ) -> None:
+    """
+    Build and play a Game.
+    """
+    # introduce the game
+    print(GAME_INTRO, file=sys.stdout, flush=True)
+
+    # setup
+    number_of_players = None
+    player_names = []
+    try:
+        number_of_players = prompt_number("how many players?", int, (2,4))
+        for i in range(number_of_players):
+            player_names.append(prompt_string(f"enter the name of player {i+1}"))
+    except EOFError:
+        print("exiting")
+        return
+
+    # create Game and play
+    a_game = Game(number_of_players)
+    for name in player_names:
+        a_game.add_player_by_name(name)
+
+    a_game.play()
+
+    # ask to play again or quit; recurse if playing again
+    is_play_again = prompt_yn("play again?")
+    if is_play_again == True:
+        play_runner(interactive)
+
+    return
 
