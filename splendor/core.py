@@ -857,7 +857,7 @@ class PlayerTokenCache(TokenCache):
 
 
 # players count -> tokens count per type
-TOKEN_COUNT_MAP = {2: 4, 3: 6, 4: 7}
+TOKEN_COUNT_MAP = {2: 4, 3: 5, 4: 7}
 
 
 class GameTokenCache(TokenCache):

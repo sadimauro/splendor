@@ -72,7 +72,7 @@ class GameState:
     """
     dev_card_decks: Tuple[List, List, List] # idx=i -> deck #i+1
     nobles_in_play: NoblesInPlay
-    token_cache: GameTokenCache
+    game_token_cache: GameTokenCache
 
     def __init__(
         self,
@@ -94,7 +94,7 @@ class GameState:
             no: int) -> DevCardDeck:
         if (no-1) < 0 or (no-1) > len(self.dev_card_decks):
             raise Exception("no such dev card deck")
-        return self.dev_card_deck[no-1]
+        return self.dev_card_decks[no-1]
 
     def set_dev_card_deck(
             self,
@@ -117,10 +117,10 @@ class GameState:
         return
 
     def get_token_cache(self) -> GameTokenCache:
-        return self.token_cache
+        return self.game_token_cache
 
     def set_token_cache(self, new_token_cache: GameTokenCache) -> None:
-        self.token_cache = new_token_cache
+        self.game_token_cache = new_token_cache
         return
 
 
@@ -281,6 +281,23 @@ class Game:
     Traceback (most recent call last):
     Exception...
 
+    >>> a_game.get_current_dev_card_deck(1).count()
+    40
+    >>> a_game.get_current_dev_card_deck(2).count()
+    30
+    >>> a_game.get_current_dev_card_deck(3).count()
+    20
+    >>> a_game.get_current_game_state().get_dev_card_deck(3).count()
+    20
+    >>> a_game.get_current_nobles_in_play().count()
+    4
+    >>> a_game.get_current_game_token_cache().count_type("black")
+    5
+    >>> a_game.get_current_game_token_cache().count_type("blue")
+    5
+    >>> a_game.get_current_game_token_cache().count_type("yellow")
+    5
+
     >>> a_game.get_current_player_idx()
     0
     >>> a_game.set_current_player_by_name("Bernardo")
@@ -350,8 +367,11 @@ class Game:
     def get_current_nobles_in_play(self) -> NoblesInPlay:
         return self.get_current_game_state().get_nobles_in_play()
     
-    def get_current_token_cache(self) -> PlayerTokenCache:
+    def get_current_game_token_cache(self) -> GameTokenCache:
         return self.get_current_game_state().get_token_cache()
+    
+    def get_round_number_idx(self) -> int:
+        return self.round_number_idx
 
     def play(self) -> None:
         pass
