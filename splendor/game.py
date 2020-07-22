@@ -82,7 +82,7 @@ class GameState:
     >>> game_state = GameState(dev_card_deck_1, dev_card_deck_2, dev_card_deck_3, nobles_in_play, game_token_cache)
 
     """
-    dev_card_decks: List[List, List, List] # idx=i -> deck #i+1
+    dev_card_decks: List # idx=i -> deck #i+1
     nobles_in_play: NoblesInPlay
     game_token_cache: GameTokenCache
 
@@ -94,7 +94,7 @@ class GameState:
         nobles_in_play: NoblesInPlay,
         game_token_cache: GameTokenCache,
     ) -> None:
-        self.dev_card_decks = [(dev_card_deck_1, dev_card_deck_2, dev_card_deck_3)]
+        self.dev_card_decks = [dev_card_deck_1, dev_card_deck_2, dev_card_deck_3]
         self.nobles_in_play = nobles_in_play
         self.game_token_cache = game_token_cache
 
@@ -373,11 +373,11 @@ class Game:
         return self.game_state_history
 
     def append_game_state(self, new_state) -> None:
-        self.game_state_history.append(new_state)
+        self.get_game_state_history().append(new_state)
         return
 
     def get_current_game_state(self) -> GameState:
-        return self.game_state_history.get_current_state()
+        return self.get_game_state_history().get_current_state()
 
     def get_current_dev_card_deck(self, no: int) -> DevCardDeck:
         return self.get_current_game_state().get_dev_card_deck(no)
