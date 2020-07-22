@@ -3,7 +3,7 @@ game.py - TODO
 """
 
 from copy import deepcopy
-from core import (
+from splendor.core import (
         DevCard,
         DevCardDeck,
         DevCardType,
@@ -14,23 +14,21 @@ from core import (
         Token,
         TokenType,
         )
-from game_setup import (
+from splendor.game_setup import (
         create_dev_card_deck_shuffled,
         create_nobles_in_play_shuffled,
         GAME_INTRO,
         )
-from interactive import (
+from splendor.interactive import (
         prompt_number,
         prompt_string,
         prompt_yn,
         )
-
-from player import (
+from splendor.player import (
         Player,
         )
-from typing import List, Dict, Set, Tuple
-
 import sys
+from typing import List, Dict, Set, Tuple
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -135,6 +133,18 @@ class GameState:
         self.game_token_cache = new_token_cache
         return
 
+    def __str__(self) -> str:
+        ret = ""
+        ret += "GameState: "
+        ret += "\n"
+        ret += f"Decks: "
+        ret += "\n"
+        for no in range(1,4):
+            ret += f"  ({no}) {self.get_dev_card_deck(no)}\n"
+        ret += f"{self.get_nobles_in_play()}"
+        ret += f"{self.get_token_cache()}"
+        return ret
+
 
 class GameStateHistory:
     """
@@ -189,6 +199,10 @@ class GameStateHistory:
     def append(self, new_state) -> None:
         self.l.append(new_state)
         return
+    
+    def count(self) -> int:
+        """ Count the number of states. """
+        return len(self.l)
 
     def get_current_state(self) -> GameState:
         """ Retrieve the current state within this GameStateHistory. """
@@ -323,9 +337,14 @@ class Game:
 
     number_of_players: int
     players: List[Player] # list b/c order of play matters
+    start_player_idx: int
     current_player_idx: int
+
     game_state_history: GameStateHistory
     round_number_idx: int
+    
+    winning_score: int
+    winning_player_idx: int
     
     def __init__(self, number_of_players: int) -> None:
         """
@@ -333,10 +352,13 @@ class Game:
         """
         self.number_of_players = number_of_players
         self.players = list()
+        self.start_player_idx = 0 # TODO make this an arg?
         self.current_player_idx = 0
         self.game_state_history = GameStateHistory()
         self.game_state_history.append(generate_initial_game_state(self.number_of_players))
         self.round_number_idx = 0
+        self.winning_score = WINNING_SCORE
+        self.winning_score_idx = -1
         return
 
     def add_player(self, player: Player) -> None:
@@ -348,6 +370,12 @@ class Game:
     def add_player_by_name(self, player_name: str) -> None:
         self.add_player(Player(player_name))
         return
+
+    def get_player_by_idx(
+        self,
+        idx: int,
+        ) -> Player:
+        return self.players[idx]
 
     def get_current_player_idx(self) -> int:
         return self.current_player_idx
@@ -368,6 +396,58 @@ class Game:
                 self.current_player_idx = i
                 return
         raise Exception(f"could not find player {player_name}")
+
+    def set_current_player_by_idx(self, idx: int) -> None:
+        self.current_player_idx = idx
+
+    def go_to_next_player(self) -> None:
+        next_idx = self.get_current_player_idx() + 1
+        if next_idx >= len(self.players):
+            next_idx = 0
+            self.round_number_idx += 1
+        self.set_current_player_by_idx(next_idx)
+        return
+    
+    def player_has_winning_score(
+        self,
+        player: Player,
+        ) -> bool:
+        return player.calc_score() >= self.winning_score
+    
+    def determine_winning_player(self) -> int:
+        """
+        Return the index of the winning player.
+
+        The player who then has the highest number of prestige points
+        is declared the winner (don’t forget to count your nobles).
+        In case of a tie, the player who has purchased the fewest
+        development cards wins.
+        """
+        highest_score = -1
+        highest_score_player_idx = []
+        for idx in range(len(self.players)):
+            player_calc_score = self.get_player_by_idx(idx).calc_score()
+            if player_calc_score == highest_score:
+                highest_score_player_idx.append(idx)
+            elif player_calc_score > highest_score:
+                highest_score_player_idx = [idx]
+                highest_score = player_calc_score
+        
+        len_highest_score_player_idx = len(highest_score_player_idx)  
+        if len_highest_score_player_idx == 1:
+            return highest_score_player_idx[0]
+        elif len_highest_score_player_idx > 1:
+            fewest_dev_cards = 999999
+            fewest_dev_cards_idx = -1
+            for idx in len_highest_score_player_idx:
+                dev_cards_this_player = self.get_player_by_idx(idx).get_current_dev_card_cache_count()
+                if dev_cards_this_player < fewest_dev_cards:
+                    fewest_dev_cards = dev_cards_this_player
+                    fewest_dev_cards_idx = idx
+            return fewest_dev_cards_idx
+            # TODO: there can still be a tie here, though rare.  How to handle it?  Rules don't say.
+        else:
+            raise Exception("internal error") 
 
     def get_game_state_history(self) -> GameStateHistory:
         return self.game_state_history
@@ -391,16 +471,59 @@ class Game:
     def get_round_number_idx(self) -> int:
         return self.round_number_idx
 
+    def play_turn(
+        self,
+        player: Player,
+        interactive: bool=True,
+        ) -> None:
+        """
+        Player takes a turn.  Used by play().
+        """
+        # TODO add logic
+        sys.exit()
+
     def play(
             self,
-            interactive=True,
+            is_interactive: bool=True,
             ) -> None:
         """
         Play a game of Splendor.
+
+        Assume that the Game has already been initialized by the caller.
+
+        # TODO add tests
+        # TODO use interactive argument
         """
-        # TODO
-        pass
-        
+
+        is_last_turns = False
+        while is_last_turns == False:
+
+            # show the current state of the game
+            if is_interactive == True:
+                print(self)
+
+            # current player takes a turn
+            current_player = self.get_current_player()
+            self.play_turn(current_player, is_interactive)
+            if self.player_has_winning_score(current_player):
+                is_last_turns = True
+            self.go_to_next_player()
+
+        # make sure all players get an equal number of turns    
+        while self.get_current_player_idx() != self.start_player_idx:
+
+            # show the current state of the game
+            if is_interactive == True:
+                print(self)
+
+            current_player = self.get_current_player()
+            self.play_turn(current_player, is_interactive)
+            self.go_to_next_player()
+
+        # determine the winner
+        self.winning_player_idx = self.determine_winning_player()
+        print(f"winner is {self.get_player_by_idx(self.winning_player_idx).get_name()}")
+        return
     
     def action_take_three_tokens(
             self,
@@ -583,15 +706,33 @@ class Game:
 
         return
 
+    def __str__(self):
+        ret = ""
+        ret += "Game: "
+        ret += "\n"
+        ret += f"players ({self.number_of_players}): "
+        ret += ",".join([player.get_name() for player in self.players])
+        ret += "\n"
+        ret += f"current: {self.get_current_player().get_name()}; starting: {self.get_player_by_idx(self.start_player_idx).get_name()}"
+        ret += "\n"
+        ret += f"current state (total = {self.game_state_history.count()}, round number = {self.round_number_idx}):"
+        ret += "\n"
+        ret += f"{self.get_current_game_state()}"
+        ret += "\n"
+        ret += f"Winning score = {self.winning_score}"
+        if self.winning_score_idx != -1:
+            ret += f"; winner: {self.get_player_by_idx(self.winning_score_idx)}"
+        ret += "\n"
+        return ret
 
-def play_runner(
-        interactive=True,
-        ) -> None:
+def play_runner_interactive(
+    out=sys.stdout,
+    ) -> None:
     """
     Build and play a Game.
     """
     # introduce the game
-    print(GAME_INTRO, file=sys.stdout, flush=True)
+    print(GAME_INTRO, file=out, flush=True)
 
     # setup
     number_of_players = None
@@ -608,13 +749,12 @@ def play_runner(
     a_game = Game(number_of_players)
     for name in player_names:
         a_game.add_player_by_name(name)
-
-    a_game.play()
+    a_game.play(is_interactive=True)
 
     # ask to play again or quit; recurse if playing again
     is_play_again = prompt_yn("play again?")
     if is_play_again == True:
-        play_runner(interactive)
+        play_runner_interactive()
 
     return
 

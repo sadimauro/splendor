@@ -3,7 +3,14 @@ game_setup.py - Initial values for setting up a Splendor game, i.e. decks, token
 """
 
 from copy import deepcopy
-from core import DevCard, DevCardDeck, DevCardType, GameTokenCache, Noble, NoblesInPlay
+from splendor.core import (
+    DevCard, 
+    DevCardDeck, 
+    DevCardType, 
+    GameTokenCache, 
+    Noble, 
+    NoblesInPlay,
+    )
 import random
 
 import logging

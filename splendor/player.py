@@ -2,7 +2,8 @@
 player.py - Player and player-related classes.
 """
 
-from core import (
+from copy import deepcopy
+from splendor.core import (
     DevCard,
     DevCardCache,
     DevCardReserve,
@@ -13,15 +14,17 @@ from core import (
     Token,
     TokenType,
 )
-
-from copy import deepcopy
 from enum import Enum
 import json
-import logging
 import random
 import string
-from typing import List, Dict, Set
+from typing import (
+    Dict, 
+    List, 
+    Set,
+)
 
+import logging
 logging.basicConfig(level=logging.INFO)
 
 
@@ -105,7 +108,7 @@ class PlayerState:
 
 def clone_playerState_new_token_cache(
     old_player_state: PlayerState, new_token_cache: PlayerTokenCache
-) -> PlayerState:
+    ) -> PlayerState:
     """
     Create a new PlayerState from an existing one but using the updated
     TokenCache.
@@ -114,10 +117,9 @@ def clone_playerState_new_token_cache(
     ret.set_token_cache(new_token_cache)
     return ret
 
-
 def clone_playerState_new_dev_card_cache(
     old_player_state: PlayerState, new_dev_card_cache: DevCardCache,
-) -> PlayerState:
+    ) -> PlayerState:
     """
     Create a new PlayerState from an existing one but using the updated
     DevCardCache.
@@ -126,10 +128,9 @@ def clone_playerState_new_dev_card_cache(
     ret.set_dev_card_cache(new_dev_card_cache)
     return ret
 
-
 def clone_playerState_new_dev_card_reserve(
     old_player_state: PlayerState, new_dev_card_reserve: DevCardReserve,
-) -> PlayerState:
+    ) -> PlayerState:
     """
     Create a new PlayerState from an existing one but using the updated
     DevCardReserve.
@@ -138,13 +139,12 @@ def clone_playerState_new_dev_card_reserve(
     ret.set_dev_card_reserve(new_dev_card_reserve)
     return ret
 
-
 def clone_playerState(
     old_player_state: PlayerState,
     new_token_cache: PlayerTokenCache = None,
     new_dev_card_cache: DevCardCache = None,
     new_dev_card_reserve: DevCardReserve = None,
-) -> PlayerState:
+    ) -> PlayerState:
     """
     Create a new PlayerState from an existing one but using the updated
     TokenCache, DevCardCache, and/or DevCardReserve (any or all can be None).
@@ -355,6 +355,12 @@ class Player:
 
     def get_current_dev_card_cache(self) -> DevCardCache:
         return self.get_current_player_state().get_dev_card_cache()
+    
+    def get_current_dev_card_cache_count(self) -> int:
+        """
+        Return the number of cards in the cache.  Used (at least) to determine the winner in the tiebreak scenario.
+        """
+        return self.get_current_dev_card_cache().count()
 
     def get_current_dev_card_reserve(self) -> DevCardReserve:
         return self.get_current_player_state().get_dev_card_reserve()
@@ -386,7 +392,7 @@ class Player:
         # if this player's TokenCache will overflow, raise Exception.
         if not self.can_fit_tokens(len(token_type_str_add_list)):
             raise Exception(
-                f"not enough space in player's token cache to add {len(token_type_add_list)} tokens"
+                f"not enough space in player's token cache to add {len(token_type_str_add_list)} tokens"
             )
 
         # Create updated state including the updated token cache
@@ -485,3 +491,12 @@ class Player:
         )
         self.append_player_state(new_state)
         return
+
+        def __str__(self):
+            ret = ""
+            ret += f"Player: {self.get_name()}"
+            ret += "\n"
+            ret += "State: "
+            ret += "\n"
+            ret += f"{self.get_current_player_state()}"
+            return ret

@@ -14,6 +14,7 @@ logging.basicConfig(level=logging.INFO)
 
 def prompt_yn(
         prompt: str="",
+        out=sys.stdout,
         ) -> bool:
     """
     """
@@ -30,13 +31,14 @@ def prompt_yn(
         elif text_in_cleaned == 'N':
             return False
         else:
-            print("error: must enter 'y' or 'n'")
+            print("error: must enter 'y' or 'n'", file=out)
             continue
 
 def prompt_number(
         prompt: str="",
         typ: Type=int,
         input_range: Tuple=None,
+        out=sys.stdout,
         ) -> int:
     """
     Prompt the user for a number (int or float).  
@@ -71,11 +73,11 @@ def prompt_number(
         try:
             text_in_casted = typ(text_in_cleaned)
         except ValueError:
-            print(f"'{text_in_cleaned}' is not an {typ.__name__}")
+            print(f"'{text_in_cleaned}' is not an {typ.__name__}", file=out)
             continue
         if input_range != None:
             if text_in_casted < input_range[0] or text_in_casted > input_range[1]:
-                print(f"error: input must be between {input_range[0]} and {input_range[1]}, inclusive")
+                print(f"error: input must be between {input_range[0]} and {input_range[1]}, inclusive", file=out)
                 continue
         
         return text_in_casted
@@ -83,6 +85,7 @@ def prompt_number(
 def prompt_string(
         prompt: str="",
         max_len: int=255,
+        out=sys.stdout,
         ) -> int:
     """
     Prompt the user for a string.
@@ -97,9 +100,9 @@ def prompt_string(
             raise e
         text_in_cleaned = text_in.strip()
         if text_in_cleaned == "":
-            print("error: empty string")
+            print("error: empty string", file=out)
             continue
         if len(text_in_cleaned) > max_len:
-            print("error: too long")
+            print("error: too long", file=out)
             continue
         return text_in_cleaned
