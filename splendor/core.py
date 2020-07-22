@@ -64,10 +64,13 @@ class GemType:
         return hash(self.desc)
 
     def __str__(self) -> str:
-        return self.get_desc()
+        return self.desc
+    
+    def __repr__(self) -> str:
+        return f"<GemType: {self.desc}>"
 
     def get_desc(self) -> str:
-        return self.desc
+        return self.__str__()
 
     def get_desc_long(self) -> str:
         retstr = ""
@@ -97,7 +100,8 @@ class DevCardType(GemType):
     False
     """
 
-    pass
+    def __repr__(self) -> str:
+        return f"<DevCardType: {self.desc}>"
 
 
 class DevCard:
@@ -105,8 +109,6 @@ class DevCard:
     A particular instance of a development card.  Includes level (1, 2, or 3), type, points (>= 0), and cost.
 
     >>> dev_card = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
-    >>> dev_card.__str__()
-    "l1p2black/{'blue': 2, 'red': 1}"
 
     >>> dev_card.get_cost_str()
     "{'blue': 2, 'red': 1}"
@@ -143,19 +145,13 @@ class DevCard:
                 and self.t == other.t
                 and self.ppoints == other.ppoints
                 and self.cost == other.cost
-                )
-
-#    def __hash__(self) -> int:
-#        return hash((self.level, self.t, self.ppoints, self.cost))                
+                )             
 
     def __str__(self) -> str:
-        return f"l{self.level}p{self.ppoints}{self.t.__str__()}/{self.get_cost_str()}"
+        return f"Development card: level {self.level}, points {self.ppoints}, type {self.t.__str__()}, cost {self.get_cost_str()}"
 
     def __repr__(self) -> str:
-        return self.__str__()
-
-    # def get_image(self) -> bytes:
-    #    pass
+        return f"<DevCard: l{self.level} p{self.ppoints} t{self.t.__str__()} c{self.get_cost_str()}>"
 
 
 class DevCardCache:
@@ -190,8 +186,6 @@ class DevCardCache:
     0
 
     >>> dev_card_cache.remove(dc1)
-    >>> dev_card_cache.__str__()
-    'Dev cards on hand: {"black": 1, "blue": 1}'
     >>> dev_card_cache.remove(dc1)
     Traceback (most recent call last):
     Exception: cannot remove card from DevCardCache: card not found
@@ -277,16 +271,19 @@ class DevCardCache:
         return ret
 
     def __repr__(self) -> str:
-        ret_list = []
-        for t in self.d:
-            ret_list.append(self.d.get(t).__repr__() + "\n")
-        return "\n".join(ret_list)
+        ret = ""
+        ret += f"<DevCardCache: ({self.count()})"
+        if self.count() > 0:
+            ret += ": "
+            ret_list = []
+            for t in self.d:
+                ret_list.append(self.d.get(t).__repr__())
+            ret += ",".join(ret_list)
+        ret += ">"
+        return ret
 
-
-#    get_image() -> bytes
 
 DEV_CARD_RESERVE_COUNT_MAX = 3
-
 
 class DevCardReserve:
     """
@@ -301,8 +298,6 @@ class DevCardReserve:
     >>> dev_card_reserve.add(dc1)
     >>> dev_card_reserve.count()
     1
-    >>> dev_card_reserve.__str__()
-    "Dev cards in reserve (1):\\nl1p2black/{'blue': 2, 'red': 1}"
     >>> dev_card_reserve.add(dc2)
     >>> dev_card_reserve.count()
     2
@@ -384,10 +379,21 @@ class DevCardReserve:
         ret_str += "\n".join(ret_list)
 
         return ret_str
+    
+    def __repr__(self) -> str:
+        ret = ""
+        ret += f"<DevCardReserve: ({self.count()})"
+        if self.count() > 0:
+            ret += ": "
+            ret_list = []
+            for t in self.s:
+                ret_list.append(self.s.get(t).__repr__())
+            ret += ",".join(ret_list)
+        ret += ">"
+        return ret
 
 
 UPFACING_CARDS_LEN = 4
-
 
 class DevCardDeck:
     """
@@ -457,6 +463,9 @@ class DevCardDeck:
     def get_list(self) -> List[DevCard]:
         return self.l
 
+    def count(self) -> int:
+        return len(self.l)
+        
     def get_facing(self) -> List[DevCard]:
         """
         Return cards at indices 0..3, which are the facing ones, as a List
@@ -464,6 +473,14 @@ class DevCardDeck:
         if len(self.l) < UPFACING_CARDS_LEN:
             raise Exception("not enough cards remain to get facing ones")
         return self.l[0:UPFACING_CARDS_LEN]
+    
+    def get_count_upfacing(self) -> int:
+        return min(self.count(), UPFACING_CARDS_LEN)
+    
+    def get_count_hidden(self) -> int:
+        if self.count() <= UPFACING_CARDS_LEN:
+            return 0
+        return self.count() - UPFACING_CARDS_LEN
 
     def shuffle(self) -> None:
         random.shuffle(self.l)
@@ -473,7 +490,7 @@ class DevCardDeck:
         """
         Find dev_card within this deck; return its index or -1 if not found.
         """
-        for idx in range(len(self.l)): 
+        for idx in range(self.count()): 
             if self.l[idx] == card_seeking:
                 return idx
         return -1
@@ -491,37 +508,35 @@ class DevCardDeck:
         """
         Remove DevCard at index 4, which is the top of the deck, and return it
         """
-        if len(self.l) < UPFACING_CARDS_LEN + 1:
+        if self.count() < UPFACING_CARDS_LEN + 1:
             raise Exception("not enough cards remain to get hidden one")
         return self.l.pop(UPFACING_CARDS_LEN)
 
     def is_hidden_empty(self) -> bool:
-        if len(self.l) < UPFACING_CARDS_LEN + 1:
+        if self.count() < UPFACING_CARDS_LEN + 1:
             return True
         return False
 
     def is_empty(self) -> bool:
-        if len(self.l) <= 0:
+        if self.count() <= 0:
             return True
         return False
 
-    def count(self) -> int:
-        return len(self.l)
-
     def __str__(self) -> str:
         ret_str = ""
-        ret_str += f"Dev cards in deck "
-        ret_str += f"(level {self.level}, count {len(self.l)}):\n"
+        ret_str += f"Development cards deck "
+        ret_str += f"level {self.level}, total {self.count()}, hidden {self.get_count_hidden()}"
+        ret_str += "\n"
 
         ret_list = []
-        for card in self.l:
+        for card in self.get_facing():
             ret_list.append(card.__str__())
         ret_str += "\n".join(ret_list)
 
         return ret_str
 
-
-#    get_image() -> bytes
+    def __repr__(self) -> str:
+        return f"<DevCardDeck: level {self.level}, total {self.count()}, hidden {self.get_count_hidden()}>"
 
 
 class Noble:
@@ -550,15 +565,15 @@ class Noble:
     def get_cost(self) -> Dict[DevCardType, int]:
         return self.cost
 
-    def get_cost_str(self) -> str:
-        return self.cost.__str__()
+    #def get_cost_str(self) -> str:
+    #    return self.cost.__str__()
 
     def __str__(self) -> str:
-        return f"p{self.ppoints}/{self.get_cost_str()}"
-
-
-#    get_image() -> bytes
-
+        return f"p{self.ppoints}/{self.cost.__str__()}"
+        
+    def __repr__(self) -> str:
+        return f"<Noble: points {self.ppoints}, cost {self.cost.__repr__()}>"
+        
 
 class NoblesInPlay:
     """ 
@@ -586,6 +601,9 @@ class NoblesInPlay:
         for noble in self.s:
             retstr += noble.__str__() + "\n"
         return retstr
+    
+    def __repr__(self) -> str:
+        return f"<NoblesInPlay: {self.count()}>"
 
 
 class TokenType(GemType):
@@ -606,7 +624,9 @@ class TokenType(GemType):
     False
     """
 
-    pass
+    def __repr__(self) -> str:
+        return f"<TokenType: {self.desc}>"
+
 
 
 class Token:
@@ -642,8 +662,9 @@ class Token:
 
     def __str__(self) -> str:
         return self.tt.__str__()
-
-        #    get_image() -> bytes
+    
+    def __repr__(self) -> str:
+        return f"<Token: {self.tt.__repr__()}, image {len(self.image)} bytes>"
 
 
 class TokenCache:
@@ -746,9 +767,20 @@ class TokenCache:
             return True
         return False
 
+    def __str__(self) -> str:
+        ret = ""
+        ret += f"Token cache ({self.count()} total): "
+        ret_dict = {}
+        for key in self.d:
+            ret_dict[key.__str__()] = self.d.get(key)
+        ret += json.dumps(ret_dict, sort_keys=True)
+        return ret
+
+    def __repr__(self) -> str:
+        return f"<TokenCache: {self.count()} total>"
+
 
 PLAYER_TOKEN_CACHE_MAX = 10
-
 
 class PlayerTokenCache(TokenCache):
     """
@@ -852,6 +884,8 @@ class PlayerTokenCache(TokenCache):
             self.remove(typ_str, cost_dict[typ_str])
         return
 
+    def __repr__(self) -> str:
+        return f"<PlayerTokenCache: {self.count()} total>"
 
 # players count -> tokens count per type
 TOKEN_COUNT_MAP = {2: 4, 3: 5, 4: 7}
@@ -903,5 +937,8 @@ class GameTokenCache(TokenCache):
 
     # def can_action_take_three_tokens(token_types_set: Set[TokenType]) -> bool
     # def can_action_take_two_tokens(token_types_set: Set[TokenType]) -> bool
+
+    def __repr__(self) -> str:
+        return f"<GameTokenCache: {self.count()} total>"
 
 

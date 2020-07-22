@@ -104,6 +104,9 @@ class PlayerState:
         ret += self.dev_card_cache + "\n"
         ret += self.dev_card_reserve + "\n"
         return ret
+    
+    def __repr__(self) -> str:
+        return f"<PlayerState>"
 
 
 def clone_playerState_new_token_cache(
