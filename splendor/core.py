@@ -632,7 +632,7 @@ class Token:
         return self.tt
     
     def get_type(self) -> str:
-        return self.tt.get_type()
+        return self.tt.get_desc()
     
     def get_type_str(self) -> str:
         return self.get_type()

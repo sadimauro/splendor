@@ -82,7 +82,7 @@ class GameState:
     >>> game_state = GameState(dev_card_deck_1, dev_card_deck_2, dev_card_deck_3, nobles_in_play, game_token_cache)
 
     """
-    dev_card_decks: Tuple[List, List, List] # idx=i -> deck #i+1
+    dev_card_decks: List[List, List, List] # idx=i -> deck #i+1
     nobles_in_play: NoblesInPlay
     game_token_cache: GameTokenCache
 
@@ -94,7 +94,7 @@ class GameState:
         nobles_in_play: NoblesInPlay,
         game_token_cache: GameTokenCache,
     ) -> None:
-        self.dev_card_decks = ((dev_card_deck_1, dev_card_deck_2, dev_card_deck_3))
+        self.dev_card_decks = [(dev_card_deck_1, dev_card_deck_2, dev_card_deck_3)]
         self.nobles_in_play = nobles_in_play
         self.game_token_cache = game_token_cache
 
@@ -215,7 +215,7 @@ def clone_gameState_new_dev_card_deck(
     old_game_state: GameState, 
     new_deck_no: int,
     new_dev_card_deck: DevCardDeck,
-) -> GameState:
+    ) -> GameState:
     """
     Create a new GameState from an existing one but using the updated
     DevCardDeck.
@@ -227,7 +227,7 @@ def clone_gameState_new_dev_card_deck(
 def clone_gameState_new_nobles_in_play(
         old_game_state: GameState, 
         new_nobles_in_play: NoblesInPlay,
-) -> GameState:
+        ) -> GameState:
     """
     Create a new GameState from an existing one but using the updated
     NoblesInPlay.
@@ -238,8 +238,8 @@ def clone_gameState_new_nobles_in_play(
 
 def clone_gameState_new_token_cache(
     old_game_state: GameState, 
-    new_token_cache: GameTokenCache
-) -> GameState:
+    new_token_cache: GameTokenCache,
+    ) -> GameState:
     """
     Create a new GameState from an existing one but using the updated
     TokenCache.
@@ -254,7 +254,7 @@ def clone_gameState(
     new_dev_card_deck: DevCardDeck = None,
     new_nobles_in_play: NoblesInPlay = None,
     new_token_cache: GameTokenCache = None,
-) -> GameState:
+    ) -> GameState:
     """
     Create a new GameState from an existing one but using the updated
     TokenCache, DevCardCache, and/or DevCardReserve (any or all can be None).
@@ -268,7 +268,9 @@ def clone_gameState(
         ret.set_token_cache(new_token_cache)
     return ret
 
-def generate_initial_game_state(players_count: int) -> GameState:
+def generate_initial_game_state(
+    players_count: int,
+    ) -> GameState:
     """
     Generate the initial state of the game, i.e. shuffle and deal out the decks, set up the tokens, etc.
     """
@@ -396,9 +398,10 @@ class Game:
         """
         Play a game of Splendor.
         """
+        # TODO
+        pass
         
-
-
+    
     def action_take_three_tokens(
             self,
             player: Player,
@@ -417,15 +420,15 @@ class Game:
             or token_type_str_2 == token_type_str_3
         ):
             raise Exception("action not allowed: chosen tokens must be all different")
-        if is_joker(token_type_str_1) or is_joker(token_type_str_2) or is_joker(token_type_str_3):
+        if TokenType(token_type_str_1).is_joker() or TokenType(token_type_str_2).is_joker() or TokenType(token_type_str_3).is_joker():
             raise Exception("action not allowed: chosen tokens must not be jokers")
 
         # make sure player isn't over his/her max
-        if not player.can_fit_tokens(len(token_type_str_add_list)):
+        if not player.can_fit_tokens(3):
             raise Exception(
-                f"not enough space in player's token cache to add {len(token_type_add_list)} tokens"
+                f"not enough space in player's token cache to add 3 tokens"
             )
-            # instead of above, we need to allow the player to get rid of some of his/her current tokens
+            # TODO: instead of above, we need to allow the player to get rid of some of his/her current tokens
 
         current_game_state = self.get_current_game_state()
         game_token_cache = current_game_state.get_token_cache()
@@ -446,29 +449,30 @@ class Game:
                 )
 
         # update game
-        for token_type_str_to_remove in token_type_str_add_list:
-            token_cache.remove(token_type_str_to_remove)
+        for token_type_str_to_remove in [token_type_str_1, token_type_str_2, token_type_str_3]:
+            game_token_cache.remove(token_type_str_to_remove)
         new_state = clone_gameState_new_token_cache(
             current_game_state,
-            token_cache,
+            game_token_cache,
         )
         self.append_game_state(new_state)
         return
 
     def action_take_two_tokens(
             self,
+            player: Player,
             token_type_str: str,
             ) -> None:
         """
         Complete the player action of taking two tokens.
         """
-        if is_joker(token_type_str):
+        if TokenType(token_type_str).is_joker():
             raise Exception("action not allowed: chosen tokens must not be jokers")
         
         # make sure player isn't over his/her max
-        if not player.can_fit_tokens(len(token_type_str_add_list)):
+        if not player.can_fit_tokens(2):
             raise Exception(
-                f"not enough space in player's token cache to add {len(token_type_add_list)} tokens"
+                f"not enough space in player's token cache to add 2 tokens"
             )
             # instead of above, we need to allow the player to get rid of some of his/her current tokens
         
@@ -477,10 +481,10 @@ class Game:
         
         # make sure game has the right tokens
         if game_token_cache.count_type(token_type_str) < 2:
-            raise Exception(f"not enough tokens of type {token_type_str_1} in the game's token cache")
+            raise Exception(f"not enough tokens of type {token_type_str} in the game's token cache")
 
         # make sure we're not breaking a rule
-        if token_cache.count_type(token_type_str) < TAKE_TWO_TOKENS_MINIMUM:
+        if game_token_cache.count_type(token_type_str) < TAKE_TWO_TOKENS_MINIMUM:
             raise Exception(f"cannot take two tokens from a stack with fewer than {TAKE_TWO_TOKENS_MINIMUM}")
 
         # update player
@@ -489,11 +493,11 @@ class Game:
                 )
 
         # update game
-        for token_type_str_to_remove in token_type_str_add_list:
-            token_cache.remove(token_type_str_to_remove)
+        for token_type_str_to_remove in [token_type_str, token_type_str]:
+            game_token_cache.remove(token_type_str_to_remove)
         new_state = clone_gameState_new_token_cache(
             current_game_state,
-            token_cache,
+            game_token_cache,
         )
         self.append_game_state(new_state)
         return
@@ -529,10 +533,10 @@ class Game:
         # we ignore the return since we already have the card
         # note that the popping essentially deals out a new facing card
         dev_card_deck.pop_by_idx(found_idx)
-        new_state = close_gameState_new_dev_card_deck(
+        new_state = clone_gameState_new_dev_card_deck(
                 current_game_state,
                 dev_card_level,
-                dev_card_deck
+                dev_card_deck,
                 )
         self.append_game_state(new_state)
 
@@ -552,7 +556,7 @@ class Game:
 
         # make sure player has the required tokens to spend
         # TODO: handle use of jokers too
-        if not player.get_token_cache().can_purchase_dev_card(dev_card_to_add):
+        if not player.get_token_cache().can_purchase_dev_card(dev_card):
             raise Exception(f"cannot purchase dev card: insufficient tokens")
         
         # make sure card actually exists in the deck
@@ -567,7 +571,7 @@ class Game:
         # we ignore the return since we already have the card
         # note that the popping essentially deals out a new facing card
         dev_card_deck.pop_by_idx(found_idx)
-        new_state = close_gameState_new_dev_card_deck(
+        new_state = clone_gameState_new_dev_card_deck(
                 current_game_state,
                 dev_card_level,
                 dev_card_deck
