@@ -108,10 +108,27 @@ class DevCard:
     """
     A particular instance of a development card.  Includes level (1, 2, or 3), type, points (>= 0), and cost.
 
-    >>> dev_card = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> cost_dict = {"blue": 2, "red": 1}
+    >>> dev_card = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost=cost_dict)
 
-    >>> dev_card.get_cost_str()
-    "{'blue': 2, 'red': 1}"
+    >>> dev_card.get_level()
+    1
+    >>> dev_card.get_type().__str__()
+    'black'
+    >>> dev_card.get_ppoints()
+    2
+    >>> dev_card.get_cost_dict() == cost_dict
+    True
+
+    >>> cost_dict_2 = {"blue": 2, "red": 1}
+    >>> dev_card_2 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost=cost_dict_2)
+    >>> dev_card == dev_card_2
+    True
+
+    >>> cost_dict_3 = {"white": 2, "red": 2, "black": 1}
+    >>> dev_card_3 = DevCard(level=2, t=DevCardType("bwhite"), ppoints=0, cost=cost_dict_3)
+    >>> dev_card == dev_card_3
+    False
     """
 
     level: int  # 1, 2, or 3
@@ -120,18 +137,25 @@ class DevCard:
     cost: Dict[str, int]  # str -> count
 
     def __init__(
-        self, level: int, t: DevCardType, ppoints: int, cost: Dict[str, int],
+        self, 
+        level: int, 
+        t: DevCardType, 
+        ppoints: int, 
+        cost: Dict[str, int],
     ):
         self.level = level
         self.t = t
         self.ppoints = ppoints
         self.cost = cost
 
-    # def is_purchasable(dev_card_cache: DevCardCache, token_player_cache: TokenPlayerCache) -> bool:
-    #    pass
+    def get_level(self) -> int:
+        return self.level
 
     def get_type(self) -> DevCardType:
         return self.t
+
+    def get_ppoints(self) -> int:
+        return self.ppoints
 
     def get_cost_dict(self) -> Dict[str, int]:
         return self.cost

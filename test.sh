@@ -45,9 +45,13 @@ function doctest_module () {
 #
 # start testing
 #
+
+# doctests
 doctest_module splendor/core.py 
 doctest_module splendor/game.py 
 doctest_module splendor/game_setup.py
 doctest_module splendor/player.py
 doctest_module splendor/interactive.py
 
+# unittests
+#python3 -m unittest
