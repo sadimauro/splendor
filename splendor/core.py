@@ -5,12 +5,12 @@ core.py - Core splendor classes/functions.  Used heavily by the other splendor m
 from enum import Enum
 import json
 import random
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple
 
 import logging
 logging.basicConfig(level=logging.INFO)
 
-GEM_TYPE_COMMON_STR_DICT = {
+GEM_NAME_COMMON_STR_DICT = {
     "black": "onyx",
     "blue": "sapphire",
     "green": "emerald",
@@ -18,7 +18,7 @@ GEM_TYPE_COMMON_STR_DICT = {
     "white": "diamond",
 }
 
-GEM_TYPE_ALL_STR_DICT = {
+GEM_NAME_ALL_STR_DICT = {
     "black": "onyx",
     "blue": "sapphire",
     "green": "emerald",
@@ -27,93 +27,143 @@ GEM_TYPE_ALL_STR_DICT = {
     "yellow": "gold",
 }
 
-def is_joker(token_type_str: str) -> bool:
-    return token_type_str == "yellow"
+def is_joker(gem_str: str) -> bool:
+    return gem_str == "yellow"
 
-class GemType:
+# class GemType:
+#     """
+#     Hashable class representing the type of a gem.
+
+#     >>> gem_type_a = GemType("black")
+#     >>> gem_type_a.get_desc()
+#     'black'
+#     >>> gem_type_a.get_desc_long()
+#     'black (onyx)'
+#     >>> gem_type_a.is_joker()
+#     False
+    
+#     >>> gem_type_b = GemType("black")
+#     >>> gem_type_c = GemType("yellow")
+#     >>> gem_type_a == gem_type_b
+#     True
+#     >>> gem_type_a == gem_type_c
+#     False
+#     >>> gem_type_c.is_joker()
+#     True
+#     """
+
+#     desc: str
+
+#     def __init__(self, desc: str,) -> None:
+#         self.desc = desc
+
+#     def __eq__(self, other) -> bool:
+#         return self.desc == other.desc
+
+#     def __hash__(self) -> int:
+#         return hash(self.desc)
+
+#     def __str__(self) -> str:
+#         return self.desc
+    
+#     def __repr__(self) -> str:
+#         return f"<GemType: {self.desc}>"
+
+#     def get_desc(self) -> str:
+#         return self.__str__()
+
+#     def get_desc_long(self) -> str:
+#         retstr = ""
+#         retstr += f"{self.desc} "
+#         retstr += f"({GEM_TYPE_ALL_STR_DICT.get(self.desc)})"
+#         return retstr
+
+#     def is_joker(self) -> bool:
+#         return self.get_desc() == "yellow"
+
+class Gem:
     """
-    Hashable class representing the type of a gem.
+    Hashable class representing a gem.  Used by other classes.
 
-    >>> gem_type_a = GemType("black")
-    >>> gem_type_a.get_desc()
+    >>> gem_a = Gem("black")
+    >>> gem_a.get_name()
     'black'
-    >>> gem_type_a.get_desc_long()
+    >>> gem_a.get_name_long()
     'black (onyx)'
-    >>> gem_type_a.is_joker()
+    >>> gem_a.is_joker()
     False
     
-    >>> gem_type_b = GemType("black")
-    >>> gem_type_c = GemType("yellow")
-    >>> gem_type_a == gem_type_b
+    >>> gem_b = Gem("black")
+    >>> gem_c = Gem("yellow")
+    >>> gem_a == gem_b
     True
-    >>> gem_type_a == gem_type_c
+    >>> gem_a == gem_c
     False
-    >>> gem_type_c.is_joker()
+    >>> gem_c.is_joker()
     True
     """
 
-    desc: str
+    name: str
 
-    def __init__(self, desc: str,) -> None:
-        self.desc = desc
+    def __init__(self, name: str,) -> None:
+        self.name = name
 
     def __eq__(self, other) -> bool:
-        return self.desc == other.desc
+        return self.name == other.name
 
     def __hash__(self) -> int:
-        return hash(self.desc)
+        return hash(self.name)
 
     def __str__(self) -> str:
-        return self.desc
+        return self.name
     
     def __repr__(self) -> str:
-        return f"<GemType: {self.desc}>"
+        return f"<Gem: {self.name}>"
 
-    def get_desc(self) -> str:
+    def get_name(self) -> str:
         return self.__str__()
 
-    def get_desc_long(self) -> str:
+    def get_name_long(self) -> str:
         retstr = ""
-        retstr += f"{self.desc} "
-        retstr += f"({GEM_TYPE_ALL_STR_DICT.get(self.desc)})"
+        retstr += f"{self.name} "
+        retstr += f"({GEM_NAME_ALL_STR_DICT.get(self.name)})"
         return retstr
 
     def is_joker(self) -> bool:
-        return self.get_desc() == "yellow"
+        return self.get_name() == "yellow"
 
+# class DevCardType(GemType):
+#     """
+#     Hashable class representing the type of a development card.  Inherits from GemType.
 
-class DevCardType(GemType):
-    """
-    Hashable class representing the type of a development card.  Inherits from GemType.
-
-    >>> dev_card_type_a = DevCardType("black")
-    >>> dev_card_type_a.get_desc()
-    'black'
-    >>> dev_card_type_a.get_desc_long()
-    'black (onyx)'
+#     >>> dev_card_type_a = DevCardType("black")
+#     >>> dev_card_type_a.get_desc()
+#     'black'
+#     >>> dev_card_type_a.get_desc_long()
+#     'black (onyx)'
     
-    >>> dev_card_type_b = DevCardType("black")
-    >>> dev_card_type_c = DevCardType("blue")
-    >>> dev_card_type_a == dev_card_type_b
-    True
-    >>> dev_card_type_a == dev_card_type_c
-    False
-    """
+#     >>> dev_card_type_b = DevCardType("black")
+#     >>> dev_card_type_c = DevCardType("blue")
+#     >>> dev_card_type_a == dev_card_type_b
+#     True
+#     >>> dev_card_type_a == dev_card_type_c
+#     False
+#     """
 
-    def __repr__(self) -> str:
-        return f"<DevCardType: {self.desc}>"
+#     def __repr__(self) -> str:
+#         return f"<DevCardType: {self.desc}>"
 
 
 class DevCard:
     """
-    A particular instance of a development card.  Includes level (1, 2, or 3), type, points (>= 0), and cost.
+    A particular instance of a development card.  Includes level (1, 2, or 3), gem, points (>= 0), and cost.
 
     >>> cost_dict = {"blue": 2, "red": 1}
-    >>> dev_card = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost=cost_dict)
+    >>> dev_card = DevCard(level=1, gem=Gem("black"), ppoints=2, cost=cost_dict)
 
     >>> dev_card.get_level()
     1
-    >>> dev_card.get_type().__str__()
+    >>> dev_card.get_gem().__str__()
     'black'
     >>> dev_card.get_ppoints()
     2
@@ -121,38 +171,38 @@ class DevCard:
     True
 
     >>> cost_dict_2 = {"blue": 2, "red": 1}
-    >>> dev_card_2 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost=cost_dict_2)
+    >>> dev_card_2 = DevCard(level=1, gem=Gem("black"), ppoints=2, cost=cost_dict_2)
     >>> dev_card == dev_card_2
     True
 
     >>> cost_dict_3 = {"white": 2, "red": 2, "black": 1}
-    >>> dev_card_3 = DevCard(level=2, t=DevCardType("bwhite"), ppoints=0, cost=cost_dict_3)
+    >>> dev_card_3 = DevCard(level=2, gem=Gem("white"), ppoints=0, cost=cost_dict_3)
     >>> dev_card == dev_card_3
     False
     """
 
     level: int  # 1, 2, or 3
-    t: DevCardType  # also bonus
+    gem: Gem  # also bonus
     ppoints: int
     cost: Dict[str, int]  # str -> count
 
     def __init__(
         self, 
         level: int, 
-        t: DevCardType, 
+        gem: Gem, 
         ppoints: int, 
         cost: Dict[str, int],
         ):
         self.level = level
-        self.t = t
+        self.gem = gem
         self.ppoints = ppoints
         self.cost = cost
 
     def get_level(self) -> int:
         return self.level
 
-    def get_type(self) -> DevCardType:
-        return self.t
+    def get_gem(self) -> Gem:
+        return self.gem
 
     def get_ppoints(self) -> int:
         return self.ppoints
@@ -166,25 +216,25 @@ class DevCard:
     def __eq__(self, other) -> bool:
         return (
                 self.level == other.level
-                and self.t == other.t
+                and self.gem == other.gem
                 and self.ppoints == other.ppoints
                 and self.cost == other.cost
                 )             
 
     def __str__(self) -> str:
-        return f"Development card: level {self.level}, points {self.ppoints}, type {self.t.__str__()}, cost {self.get_cost_str()}"
+        return f"Development card: level {self.level}, ppoints {self.ppoints}, gem {self.gem.__str__()}, cost {self.get_cost_str()}"
 
     def __repr__(self) -> str:
-        return f"<DevCard: l{self.level} p{self.ppoints} t{self.t.__str__()} c{self.get_cost_str()}>"
+        return f"<DevCard: l{self.level} p{self.ppoints} g{self.gem.__str__()} c{self.get_cost_str()}>"
 
 
 class DevCardCache:
     """
     A cache of DevCards, which have already been purchased by a player.
 
-    >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
-    >>> dc2 = DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
-    >>> dc3 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc1 = DevCard(level=1, gem=Gem("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> dc2 = DevCard(level=2, gem=Gem("black"), ppoints=0, cost={"blue": 3})
+    >>> dc3 = DevCard(level=1, gem=Gem("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
     >>> dev_card_cache = DevCardCache()
 
     >>> dev_card_cache.add(dc1)
@@ -193,48 +243,48 @@ class DevCardCache:
 
     >>> dev_card_cache.calc_ppoints()
     3
-    >>> dev_card_cache.calc_discount(DevCardType("black"))
+    >>> dev_card_cache.calc_discount(Gem("black"))
     2
-    >>> dev_card_cache.calc_discount(DevCardType("blue"))   
+    >>> dev_card_cache.calc_discount(Gem("blue"))   
     1
-    >>> dev_card_cache.calc_discount(DevCardType("red"))
+    >>> dev_card_cache.calc_discount(Gem("red"))
     0
 
     >>> dev_card_cache.remove(dc1)
     >>> dev_card_cache.remove(dc1) #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception:...
-    >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc4 = DevCard(level=1, gem=Gem("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
     >>> dev_card_cache.remove(dc4) #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception:...
     """
 
-    d: Dict[DevCardType, List[DevCard]]
+    d: Dict[Gem, List[DevCard]]
 
     def __init__(self):
         self.d = {}
 
     def add(self, dev_card: DevCard,) -> None:
-        dc_type = dev_card.get_type()
-        if self.d.get(dc_type) is None:
+        dc_gem = dev_card.get_gem()
+        if self.d.get(dc_gem) is None:
             logging.debug("creating new key within self.d")
-            self.d[dc_type] = list()
+            self.d[dc_gem] = list()
         logging.debug("adding card to self.d")
-        self.d[dc_type].append(dev_card)
+        self.d[dc_gem].append(dev_card)
         return
 
     def remove(self, dev_card: DevCard,) -> None:
         """
         Remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.
         """
-        dc_type = dev_card.get_type()
-        if dc_type not in self.d.keys():
+        dc_gem = dev_card.get_type()
+        if dc_gem not in self.d.keys():
             raise Exception("cannot remove card from DevCardCache: card not found")
         try:
-            self.d.get(dc_type).remove(dev_card)
+            self.d.get(dc_gem).remove(dev_card)
         except KeyError:
-            raise Exception("cannot remove card from DevCardCache: type not found")
+            raise Exception("cannot remove card from DevCardCache: gem not found")
         except ValueError:
             raise Exception("cannot remove card from DevCardCache: card not found")
         except Exception as e:
@@ -246,8 +296,8 @@ class DevCardCache:
         Return the number of dev cards in the cache.
         """
         total_count = 0
-        for typ in self.d.keys():
-            total_count += len(self.d[typ])
+        for gem in self.d.keys():
+            total_count += len(self.d[gem])
         return total_count
 
     def calc_ppoints(self) -> int:
@@ -255,17 +305,17 @@ class DevCardCache:
         Calculate ppoints across this cache
         """
         ret = 0
-        for key in self.d.keys():
-            for dc in self.d.get(key):
+        for gem in self.d.keys():
+            for dc in self.d.get(gem):
                 ret += dc.ppoints
         return ret
 
-    def calc_discount(self, dev_card_type: DevCardType) -> int:
+    def calc_discount(self, gem: Gem) -> int:
         """
         Return current discount for DevCardType arg
         """
-        if self.d.get(dev_card_type) is not None:
-            return len(self.d.get(dev_card_type))
+        if self.d.get(gem) is not None:
+            return len(self.d.get(gem))
         else:
             return 0
 
@@ -273,8 +323,8 @@ class DevCardCache:
         ret = ""
         ret += "Dev cards on hand: "
         ret_dict = {}
-        for key in self.d:
-            ret_dict[key.__str__()] = len(self.d.get(key))
+        for gem in self.d:
+            ret_dict[gem.__str__()] = len(self.d.get(gem))
         ret += json.dumps(ret_dict, sort_keys=True)
         return ret
 
@@ -284,8 +334,8 @@ class DevCardCache:
         if self.count() > 0:
             ret += ": "
             ret_list = []
-            for t in self.d:
-                ret_list.append(self.d.get(t).__repr__())
+            for gem in self.d:
+                ret_list.append(self.d.get(gem).__repr__())
             ret += ",".join(ret_list)
         ret += ">"
         return ret
@@ -297,10 +347,10 @@ class DevCardReserve:
     """
     The reserve of development cards held by a player, which have yet to be purchased by the player.
     
-    >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
-    >>> dc2 = DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
-    >>> dc3 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
-    >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc1 = DevCard(level=1, gem=Gem("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> dc2 = DevCard(level=2, gem=Gem("black"), ppoints=0, cost={"blue": 3})
+    >>> dc3 = DevCard(level=1, gem=Gem("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc4 = DevCard(level=1, gem=Gem("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
 
     >>> dev_card_reserve = DevCardReserve()
     >>> dev_card_reserve.add(dc1)
@@ -338,17 +388,17 @@ class DevCardReserve:
     2
     """
 
-    s: List[DevCard]
+    l: List[DevCard]
 
-    def __init__(self, s: List[DevCard] = None) -> None:
-        if s is None:
-            s = list()
-        self.s = s
+    def __init__(self, l: List[DevCard] = None) -> None:
+        if l is None:
+            l = list()
+        self.l = l
 
     def add(self, dev_card: DevCard) -> None:
         if self.is_max():
             raise Exception("cannot add card to DevCardReserve: at max")
-        self.s.append(dev_card)
+        self.l.append(dev_card)
         return
 
     def remove(self, dev_card: DevCard) -> None:
@@ -356,7 +406,7 @@ class DevCardReserve:
         Remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.
         """
         try:
-            self.s.remove(dev_card)
+            self.l.remove(dev_card)
         except KeyError:
             raise Exception("cannot remove card from DevCardReserve: not found")
         except Exception as e:
@@ -365,10 +415,10 @@ class DevCardReserve:
         return
 
     def count(self) -> int:
-        return len(self.s)
+        return len(self.l)
 
     def is_max(self) -> bool:
-        return len(self.s) >= DEV_CARD_RESERVE_COUNT_MAX
+        return len(self.l) >= DEV_CARD_RESERVE_COUNT_MAX
 
     def can_action_reserve(self) -> bool:
         return not self.is_max()
@@ -376,10 +426,10 @@ class DevCardReserve:
     def __str__(self) -> str:
         ret_str = ""
         ret_str += "Dev cards in reserve "
-        ret_str += "(" + str(len(self.s)) + "):\n"
+        ret_str += "(" + str(len(self.l)) + "):\n"
 
         ret_list = []
-        for entry in self.s:
+        for entry in self.l:
             ret_list.append(entry.__str__())
         ret_str += "\n".join(ret_list)
 
@@ -391,8 +441,8 @@ class DevCardReserve:
         if self.count() > 0:
             ret += ": "
             ret_list = []
-            for t in self.s:
-                ret_list.append(self.s.get(t).__repr__())
+            for t in self.l:
+                ret_list.append(self.l.get(t).__repr__())
             ret += ",".join(ret_list)
         ret += ">"
         return ret
@@ -406,13 +456,13 @@ class DevCardDeck:
 
     Includes face-up and face-down cards.  Face-up cards are at lowest indices.
 
-    >>> dc0 = DevCard(level=1, t=DevCardType("black"), ppoints=2, cost={"blue": 2, "red": 1})
-    >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
-    >>> dc2 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
-    >>> dc3 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
-    >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=3, cost={"white": 1, "red": 1, "green": 3})
-    >>> dc5 = DevCard(level=1, t=DevCardType("red"), ppoints=0, cost={"red": 1, "green": 3})
-    >>> dc6 = DevCard(level=1, t=DevCardType("white"), ppoints=0, cost={"white": 1, "green": 3})
+    >>> dc0 = DevCard(level=1, gem=Gem("black"), ppoints=2, cost={"blue": 2, "red": 1})
+    >>> dc1 = DevCard(level=1, gem=Gem("black"), ppoints=0, cost={"blue": 3})
+    >>> dc2 = DevCard(level=1, gem=Gem("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc3 = DevCard(level=1, gem=Gem("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc4 = DevCard(level=1, gem=Gem("red"), ppoints=3, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc5 = DevCard(level=1, gem=Gem("red"), ppoints=0, cost={"red": 1, "green": 3})
+    >>> dc6 = DevCard(level=1, gem=Gem("white"), ppoints=0, cost={"white": 1, "green": 3})
     >>> dev_cards_list = [dc0, dc1, dc2, dc3, dc4, dc5, dc6]
     >>> dev_card_deck = DevCardDeck(1, dev_cards_list.copy())
     >>> dev_card_deck.get_level()
@@ -472,14 +522,14 @@ class DevCardDeck:
     0
     >>> dev_card_deck.find_card(dc4)
     4
-    >>> dc7 = DevCard(level=2, t=DevCardType("green"), ppoints=2, cost={"white": 4, "green": 3})
+    >>> dc7 = DevCard(level=2, gem=Gem("green"), ppoints=2, cost={"white": 4, "green": 3})
     >>> dev_card_deck.find_card(dc7)
     -1
     """
     # TODO: is there a good way to doctest shuffle()?
 
     level: int
-    l: list  # indices 0..3 are the face-up cards; 4..n are the face-down, where 4 is the top-most
+    l: List[DevCard] # indices 0..3 are the face-up cards; 4..n are the face-down, where 4 is the top-most
 
     def __init__(self, level: int, l: List[DevCard] = None) -> None:
         """
@@ -572,30 +622,32 @@ class Noble:
     """
     A Noble.
 
-    >>> noble = Noble(3, {'black': 4, 'white': 4})
+    >>> cost_dict_1 = {Gem('black'): 4, Gem('white'): 4}
+    >>> noble = Noble(3, cost_dict_1)
     >>> noble.get_ppoints()
     3
-    >>> noble.get_cost() == {'black': 4, 'white': 4}
+    >>> noble.get_cost() == cost_dict_1
     True
     >>> noble.get_image() == None
     True
 
-    >>> noble_2 = Noble(3, {'black': 4, 'white': 4})
+    >>> noble_2 = Noble(3, cost_dict_1)
     >>> noble == noble_2
     True
-    >>> noble_3 = Noble(4, {'black': 4, 'white': 4})
+    >>> noble_3 = Noble(4, cost_dict_1)
     >>> noble == noble_3
     False
-    >>> noble_4 = Noble(3, {'black': 3, 'white': 3, 'red': 3})
+    >>> cost_dict_2 = {Gem('black'): 3, Gem('white'): 3, Gem('red'): 3}
+    >>> noble_4 = Noble(3, cost_dict_2)
     >>> noble == noble_4
     False
     """
 
     ppoints: int
-    cost: Dict[DevCardType, int]
+    cost: Dict[Gem, int]
     image: bytes
 
-    def __init__(self, ppoints: int, cost: Dict[DevCardType, int], image: bytes = None):
+    def __init__(self, ppoints: int, cost: Dict[Gem, int], image: bytes = None):
         self.ppoints = ppoints
         self.cost = cost
         self.image = image
@@ -603,7 +655,7 @@ class Noble:
     def get_ppoints(self) -> int:
         return self.ppoints
 
-    def get_cost(self) -> Dict[DevCardType, int]:
+    def get_cost(self) -> Dict[Gem, int]:
         return self.cost
 
     def get_image(self) -> bytes:
@@ -630,9 +682,12 @@ class NoblesInPlay:
     """ 
     The set of face-up Nobles.
 
-    >>> n0 = Noble(3, {'black': 4, 'white': 4})
-    >>> n1 = Noble(3, {'black': 3, 'white': 3, 'blue': 3})
-    >>> n2 = Noble(3, {'black': 4, 'green': 4})
+    >>> cost_dict_1 = {Gem('black'): 4, Gem('white'): 4}
+    >>> cost_dict_2 = {Gem('black'): 3, Gem('white'): 3, Gem('blue'): 3}
+    >>> cost_dict_3 = {Gem('black'): 4, Gem('green'): 4}
+    >>> n0 = Noble(3, cost_dict_1)
+    >>> n1 = Noble(3, cost_dict_2)
+    >>> n2 = Noble(3, cost_dict_3)
     >>> nobles_in_play = NoblesInPlay([n0, n1, n2])
     >>> nobles_in_play.count()
     3
@@ -646,12 +701,13 @@ class NoblesInPlay:
     >>> nobles_in_play.find(n1)
     -1
 
-    >>> n3 = Noble(3, {'black': 4, 'red': 4})
+    >>> cost_dict_4 = {Gem('black'): 4, Gem('red'): 4}
+    >>> n3 = Noble(3, cost_dict_4)
     >>> nobles_in_play.find(n3)
     -1
     """
 
-    l: List[Noble] # this can be a set, but well make it a list for ease of mutablilty.
+    l: List[Noble] # this can be a set, but well make it a list for ease of mutability.
 
     def __init__(self, l: List[Noble] = list()) -> None:
         self.l = l
@@ -688,26 +744,26 @@ class NoblesInPlay:
         return f"<NoblesInPlay: {self.count()}>"
 
 
-class TokenType(GemType):
-    """
-    Hashable class representing the type of a token.  Inherits from GemType.
+# class TokenType(GemType):
+#     """
+#     Hashable class representing the type of a token.  Inherits from GemType.
 
-    >>> token_type_a = TokenType("black")
-    >>> token_type_a.get_desc()
-    'black'
-    >>> token_type_a.get_desc_long()
-    'black (onyx)'
+#     >>> token_type_a = TokenType("black")
+#     >>> token_type_a.get_desc()
+#     'black'
+#     >>> token_type_a.get_desc_long()
+#     'black (onyx)'
     
-    >>> token_type_b = TokenType("black")
-    >>> token_type_c = TokenType("blue")
-    >>> token_type_a == token_type_b
-    True
-    >>> token_type_a == token_type_c
-    False
-    """
+#     >>> token_type_b = TokenType("black")
+#     >>> token_type_c = TokenType("blue")
+#     >>> token_type_a == token_type_b
+#     True
+#     >>> token_type_a == token_type_c
+#     False
+#     """
 
-    def __repr__(self) -> str:
-        return f"<TokenType: {self.desc}>"
+#     def __repr__(self) -> str:
+#         return f"<TokenType: {self.desc}>"
 
 
 class Token:
@@ -715,7 +771,7 @@ class Token:
     A token.
 
     >>> token = Token("black")
-    >>> token.get_type()
+    >>> token.get_gem_str()
     'black'
     >>> token.get_image() == None
     True
@@ -723,115 +779,122 @@ class Token:
     False
 
     >>> token = Token("yellow")
-    >>> token.get_type()
+    >>> token.get_gem_str()
     'yellow'
     >>> token.is_joker()
     True
     """
 
-    tt: TokenType
+    gem: Gem
     image: bytes
 
-    def __init__(self, token_type_str: str, image: bytes = None) -> None:
+    def __init__(self, gem_str: str, image: bytes=None) -> None:
         """
         Init a Token from a string describing the TokenType.
         """
-        self.tt = TokenType(token_type_str)
+        self.gem = Gem(gem_str)
         self.image = image
 
-    def get_token_type(self) -> TokenType:
-        return self.tt
+    def get_gem(self) -> Gem:
+        return self.gem
     
-    def get_type(self) -> str:
-        return self.tt.get_desc()
-    #def get_type_str(self) -> str:
-    #    return self.get_type()
+    def get_gem_name(self) -> str:
+        return self.gem.__str__()
 
     def get_image(self) -> bytes:
         return self.image
 
     def is_joker(self) -> bool:
-        return self.tt.is_joker()
+        return self.gem.is_joker()
 
     def __str__(self) -> str:
-        return self.tt.__str__()
+        return self.gem.__str__()
     
     def __repr__(self) -> str:
-        return f"<Token: {self.tt.__repr__()}, image {len(self.image)} bytes>"
+        return f"<Token: {self.gem.__repr__()}, image {len(self.image)} bytes>"
 
 
 class TokenCache:
     """
     The set of Tokens currently held by a player (PlayerTokenCache) or game (GameTokenCache).
 
-    >>> t0 = Token("black")
-    >>> t1 = Token("black")
-    >>> t2 = Token("yellow")
-    >>> t3 = Token("blue")
-    >>> token_cache = TokenCache(set((t0, t1, t2, t3)))
-    
+    >>> t_black_2 = Token("black")
+    >>> t_yellow = Token("yellow")
+    >>> t_blue = Token("blue")
+    >>> token_cache = TokenCache((t_black_1, t_black_2, t_yellow, t_blue))
     >>> token_cache.count()
     4
-    >>> token_cache.count_type("black")
+    >>> token_cache.count_token(t_black_1)
     2
-    >>> token_cache.count_type("red")
+    >>> token_cache.count_token(t_black_2)
+    2
+    >>> t_red = Token("red")
+    >>> token_cache.count_token(t_red
     0
-    >>> token_cache.is_type_empty("black")
+    >>> token_cache.is_token_empty(t_black_1)
     False
-    >>> token_cache.is_type_empty("red")
+    >>> token_cache.is_token_empty(t_red)
     True
 
-    >>> t4 = Token("black")
-    >>> t5 = Token("red")
-    >>> token_cache.add(t4)
-    >>> token_cache.add(t5)
+    >>> t_black_3 = Token("black")
+    >>> t_red_2 = Token("red")
+    >>> token_cache.add(t_black_3)
+    >>> token_cache.add(t_red_2)
     >>> token_cache.count()
     6
-    >>> token_cache.count_type("black")
+    >>> token_cache.count_token(t_black_3)
     3
-    >>> token_cache.is_type_empty("red")
+    >>> token_cache.is_token_empty(t_red_2)
     False
 
-    >>> token_cache.remove("yellow")
+    >>> token_cache.remove(t_yellow)
     >>> token_cache.count()
     5
-    >>> token_cache.count_type("yellow")
+    >>> token_cache.count_token(t_yellow)
     0
-    >>> token_cache.remove("yellow") #doctest: +ELLIPSIS
+    >>> token_cache.remove(t_yellow) #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception:...
     >>> token_cache.count()
     5
     """
 
-    d: Dict[TokenType, int]
+    d: Dict[Token, int]
 
-    def __init__(self, s: Set[Token] = set()) -> None:
+    def __init__(self, t: Tuple[Token] = ()) -> None:
         self.d = {}
-        for item in s:
-            self.d[item.get_token_type()] = self.d.setdefault(item.get_token_type(), 0) + 1
+        for item in t:
+            self.d[item.get_gem()] = self.d.setdefault(item.get_gem(), 0) + 1
 
     def empty(self) -> None:
         self.d = {}
 
-    def add(self, token: Token) -> None:
+    def get_tokens_list(self) -> List[Token]:
+        return list(self.d.keys())
+ 
+    def add(self, token: Token, how_many: int=1) -> None:
         """
-        Add (by Token, not by a string describing a token).
+        Add how_many tokens (by Token, not by a string describing a token).
         """
-        token_type = token.get_token_type()
-        self.d[token_type] = self.d.setdefault(token_type, 0) + 1
+        gem_name = token.get_gem_name()
+        self.add_by_name(gem_name, how_many)
 
-    def remove(self, token_type_str: str, how_many: int = 1) -> None:
+    def add_by_name(self, gem_name: str, how_many: int=1) -> None:
+        """
+        Add how_many tokens (by a string describing a token).
+        """
+        self.d[Token(gem_name)] = self.d.setdefault(Token(gem_name), 0) + how_many
+
+    def remove(self, token: Token, how_many: int=1) -> None:
         """
         Remove tokens from this cache, by a string describing a token type.
         """
-        token_type = TokenType(token_type_str)
-        if self.d.get(token_type) and self.d.get(token_type) >= how_many:
-            self.d[token_type] -= how_many
+        if self.d.get(token) and self.d.get(token) >= how_many:
+            self.d[token] -= how_many
             return
         else:
             raise Exception(
-                f"{how_many} of token type {token_type_str} not found in token cache"
+                f"{how_many} of token type {token} not found in token cache"
             )
 
     def count(self) -> int:
@@ -840,17 +903,15 @@ class TokenCache:
             count += self.d[key]
         return count
 
-    def count_type(self, token_type_str: str) -> int:
-        token_type = TokenType(token_type_str)
-        count = self.d.get(token_type)
+    def count_token(self, token: Token) -> int:
+        count = self.d.get(token)
         if count:
             return count
         else:
             return 0
 
-    def is_type_empty(self, token_type_str: str) -> bool:
-        token_type = TokenType(token_type_str)
-        if not self.d.get(token_type) or self.d.get(token_type) < 0:
+    def is_token_empty(self, token: Token) -> bool:
+        if not self.d.get(token) or self.d.get(token) < 0:
             return True
         return False
 
@@ -876,62 +937,102 @@ class PlayerTokenCache(TokenCache):
     >>> player_token_cache = PlayerTokenCache()
     >>> player_token_cache.count()
     0
-    >>> player_token_cache.count_type("black")
+    >>> player_token_cache.count_token(Token("black"))
     0
 
-    >>> player_token_cache.add(Token("black"))
-    >>> player_token_cache.add(Token("black"))
-    >>> player_token_cache.add(Token("black"))
-    >>> player_token_cache.add(Token("black"))
-    >>> player_token_cache.add(Token("black"))
-    >>> player_token_cache.add(Token("red"))
-    >>> player_token_cache.add(Token("red"))
-    >>> player_token_cache.add(Token("red"))
-    >>> player_token_cache.add(Token("blue"))
+    >>> t_black = Token("black")
+    >>> t_red = Token("red")
+    >>> t_yellow = Token("yellow")
+    >>> t_green = Token("green")
+    >>> t_white = Token("white")
+    >>> t_blue = Token("blue")
+
+    >>> initial_tokens = (t_black, t_black, t_black, t_black, t_red, t_red, t_red, t_yellow)
+    >>> player_token_cache = PlayerTokenCache(initial_tokens)
     >>> player_token_cache.count()
-    9
-    >>> player_token_cache.count_type("black")
-    5
-    >>> player_token_cache.count_type("red")
-    3
-    >>> player_token_cache.is_type_empty("black")
-    False
-    >>> player_token_cache.is_type_empty("white")
-    True
-    >>> player_token_cache.is_max()
-    False
-    >>> player_token_cache.is_over_max()
-    False
-    >>> player_token_cache.count_until_max()
-    1
-
-    >>> player_token_cache.add(Token("red"))
-    >>> player_token_cache.is_max()
-    True
-    >>> player_token_cache.is_over_max()
-    False
-    >>> player_token_cache.count_until_max()
-    0
-    >>> player_token_cache.add(Token("red"))
-    >>> player_token_cache.is_max()
-    False
-    >>> player_token_cache.is_over_max()
-    True
-    >>> player_token_cache.count_until_max()
-    0
-
-    >>> player_token_cache.remove("red")
-    >>> player_token_cache.count()
-    10
-    >>> player_token_cache.count_type("red")
+    8
+    >>> player_token_cache.count_token(t_black)
     4
-    >>> player_token_cache.remove("yellow") #doctest: +ELLIPSIS
+    >>> player_token_cache.count_token(t_red)
+    3
+    >>> player_token_cache.is_token_empty(t_black)
+    False
+    >>> player_token_cache.is_token_empty(t_white)
+    True
+    >>> player_token_cache.is_max()
+    False
+    >>> player_token_cache.is_over_max()
+    False
+    >>> player_token_cache.count_until_max()
+    2
+
+    >>> player_token_cache = PlayerTokenCache(initial_tokens)
+    >>> player_token_cache.add(t_red)
+
+    >>> player_token_cache.add(t_green)
+    >>> player_token_cache.is_max()
+    True
+    >>> player_token_cache.is_over_max()
+    False
+    >>> player_token_cache.count_until_max()
+    0
+    >>> player_token_cache.add(t_red)
+    >>> player_token_cache.is_max()
+    False
+    >>> player_token_cache.is_over_max()
+    True
+    >>> player_token_cache.count_until_max()
+    0
+
+    >>> player_token_cache = PlayerTokenCache(initial_tokens)
+    >>> player_token_cache.remove(t_red)
+    >>> player_token_cache.count()
+    7
+    >>> player_token_cache.count_token(t_red)
+    2
+
+    >>> player_token_cache.remove(t_blue) #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception:...
+
+    >>> player_token_cache = PlayerTokenCache(initial_tokens)
+    >>> cost_dict_1 = {"black": 2, "red": 1}
+    >>> dev_card_1 = DevCard(level=1, gem=Gem("black"), ppoints=2, cost=cost_dict_1)
+    >>> player_token_cache.can_purchase_dev_card(dev_card_1)
+    True
+    >>> player_token_cache.purchase_dev_card(dev_card_1)
     >>> player_token_cache.count()
-    10
-    >>> player_token_cache.count_until_max()
+    5
+    >>> player_token_cache.count_token(t_black)
+    2
+    >>> player_token_cache.count_token(t_red)
+    2
+    >>> player_token_cache.count_token(t_yellow)
+    1
+
+    >>> player_token_cache = PlayerTokenCache(initial_tokens)
+    >>> cost_dict_2 = {"black": 5, "red": 1}
+    >>> dev_card_2 = DevCard(level=1, gem=Gem("black"), ppoints=2, cost=cost_dict_2)
+    >>> player_token_cache.can_purchase_dev_card(dev_card_2)
+    True
+    >>> player_token_cache.purchase_dev_card(dev_card_2)
+    >>> player_token_cache.count()
+    2
+    >>> player_token_cache.count_token(t_black)
     0
+    >>> player_token_cache.count_token(t_red)
+    2
+    >>> player_token_cache.count_token(t_yellow)
+    0
+
+    >>> player_token_cache = PlayerTokenCache(initial_tokens)
+    >>> cost_dict_3 = {"black": 6, "red": 1}
+    >>> dev_card_3 = DevCard(level=1, gem=Gem("black"), ppoints=2, cost=cost_dict_3)
+    >>> player_token_cache.can_purchase_dev_card(dev_card_3)
+    False
+    >>> player_token_cache.purchase_dev_card(dev_card_3) #doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    Exception:...
     """
 
     def is_max(self) -> bool:
@@ -950,29 +1051,42 @@ class PlayerTokenCache(TokenCache):
         """
         return max(PLAYER_TOKEN_CACHE_MAX - self.count(), 0)
 
+    def _purchase_dev_card_tokens_needed(self, dev_card) -> TokenCache:
+        """
+        Return a TokenCache of the tokens needed to purchase dev_card, or None if the card cannot be purchased.
+
+        Considers jokers.
+        """
+        token_cache_needed = TokenCache()
+        jokers_needed = 0
+
+        cost_dict = dev_card.get_cost_dict()
+        for gem_name in cost_dict.keys():
+            cost_count_this = cost_dict[gem_name]
+            cache_count_this = self.count_token(gem_name)
+            token_cache_needed.add_by_name(gem_name, min(cost_count_this, cache_count_this))
+            if cost_count_this > cache_count_this:
+                jokers_needed += (cost_count_this - cache_count_this)
+        if jokers_needed > self.count_token(Token("yellow")):
+            return None
+        token_cache_needed.add_by_name("yellow", jokers_needed)
+        return token_cache_needed
+
     def can_purchase_dev_card(self, dev_card) -> bool:
         """
         Return True if dev_card can be purchased given the tokens in this token cache.
-        
-        TODO: how to handle jokers?
         """
-        cost_dict = dev_card.get_cost_dict()
-        for typ_str in cost_dict.keys():
-            if cost_dict[typ_str] > self.count_type(typ_str):
-                return False
-        return True
+        return self._purchase_dev_card_tokens_needed(dev_card) != None
 
     def purchase_dev_card(self, dev_card) -> None:
         """
         Remove tokens needed to purchase dev card.  Raise exception if there aren't enough tokens.
-        
-        TODO: how to handle jokers?
         """
-        if not self.can_purchase_dev_card(dev_card):
+        token_cache_needed = self._purchase_dev_card_tokens_needed(dev_card)
+        if token_cache_needed == None:
             raise Exception(f"insufficient tokens to purchase dev card {dev_card}")
-        cost_dict = dev_card.get_cost_dict()
-        for typ_str in cost_dict.keys():
-            self.remove(typ_str, cost_dict[typ_str])
+        for token in token_cache_needed.get_tokens_list():
+            self.remove(token, token_cache_needed.count_token(token))
         return
 
     def __repr__(self) -> str:
@@ -986,32 +1100,39 @@ class GameTokenCache(TokenCache):
     """
     The set of tokens available within a game.  The initial counts depend on the number of players.
     
+    >>> t_black = Token("black")
+    >>> t_red = Token("red")
+    >>> t_yellow = Token("yellow")
+    >>> t_green = Token("green")
+    >>> t_white = Token("white")
+    >>> t_blue = Token("blue")
+
     >>> game_token_cache = GameTokenCache(players_count=2)
     >>> game_token_cache.count()
     25
-    >>> game_token_cache.count_type("black")
+    >>> game_token_cache.count_token(t_black)
     4
-    >>> game_token_cache.count_type("yellow")
+    >>> game_token_cache.count_token(t_yellow)
     5
 
-    >>> game_token_cache.remove("red")
-    >>> game_token_cache.count_type("red")
+    >>> game_token_cache.remove(t_red)
+    >>> game_token_cache.count_token(t_red)
     3
-    >>> game_token_cache.is_type_empty("red")
+    >>> game_token_cache.is_token_empty(t_red)
     False
-    >>> game_token_cache.remove("red")
-    >>> game_token_cache.remove("red")
-    >>> game_token_cache.remove("red")
-    >>> game_token_cache.count_type("red")
+    >>> game_token_cache.remove(t_red)
+    >>> game_token_cache.remove(t_red)
+    >>> game_token_cache.remove(t_red)
+    >>> game_token_cache.count_token(t_red)
     0
-    >>> game_token_cache.is_type_empty("red")
+    >>> game_token_cache.is_token_empty(t_red)
     True
-    >>> game_token_cache.remove("red") #doctest: +ELLIPSIS
+    >>> game_token_cache.remove(t_red) #doctest: +ELLIPSIS
     Traceback (most recent call last):
     Exception:...
 
     >>> game_token_cache.add(Token("red"))
-    >>> game_token_cache.count_type("red")
+    >>> game_token_cache.count_token(t_red)
     1
     """
 
@@ -1022,14 +1143,12 @@ class GameTokenCache(TokenCache):
     def fill(self, players_count: int) -> None:
         if players_count not in TOKEN_COUNT_MAP.keys():
             raise Exception("invalid players_count")
-        for typ in GEM_TYPE_COMMON_STR_DICT.keys():
-            self.d[TokenType(typ)] = TOKEN_COUNT_MAP[players_count]
-        self.d[TokenType("yellow")] = 5
+        for gem_name in GEM_NAME_COMMON_STR_DICT.keys():
+            self.d[Token(gem_name)] = TOKEN_COUNT_MAP[players_count]
+        self.d[Token("yellow")] = 5
 
     # def can_action_take_three_tokens(token_types_set: Set[TokenType]) -> bool
     # def can_action_take_two_tokens(token_types_set: Set[TokenType]) -> bool
 
     def __repr__(self) -> str:
         return f"<GameTokenCache: {self.count()} total>"
-
-
