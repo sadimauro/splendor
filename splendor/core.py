@@ -142,7 +142,7 @@ class DevCard:
         t: DevCardType, 
         ppoints: int, 
         cost: Dict[str, int],
-    ):
+        ):
         self.level = level
         self.t = t
         self.ppoints = ppoints
@@ -186,38 +186,28 @@ class DevCardCache:
     >>> dc2 = DevCard(level=2, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
     >>> dc3 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
     >>> dev_card_cache = DevCardCache()
-    >>> dev_card_cache.__str__()
-    'Dev cards on hand: {}'
 
     >>> dev_card_cache.add(dc1)
-    >>> dev_card_cache.__str__()
-    'Dev cards on hand: {"black": 1}'
     >>> dev_card_cache.add(dc2)
-    >>> dev_card_cache.__str__()
-    'Dev cards on hand: {"black": 2}'
     >>> dev_card_cache.add(dc3)
-    >>> dev_card_cache.__str__()
-    'Dev cards on hand: {"black": 2, "blue": 1}'
 
     >>> dev_card_cache.calc_ppoints()
     3
-
     >>> dev_card_cache.calc_discount(DevCardType("black"))
     2
-    >>> dev_card_cache.calc_discount(DevCardType("blue"))
+    >>> dev_card_cache.calc_discount(DevCardType("blue"))   
     1
     >>> dev_card_cache.calc_discount(DevCardType("red"))
     0
 
     >>> dev_card_cache.remove(dc1)
-    >>> dev_card_cache.remove(dc1)
+    >>> dev_card_cache.remove(dc1) #doctest: +ELLIPSIS
     Traceback (most recent call last):
-    Exception: cannot remove card from DevCardCache: card not found
+    Exception:...
     >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
-    >>> dev_card_cache.remove(dc4)
+    >>> dev_card_cache.remove(dc4) #doctest: +ELLIPSIS
     Traceback (most recent call last):
-    Exception: cannot remove card from DevCardCache: card not found
-
+    Exception:...
     """
 
     d: Dict[DevCardType, List[DevCard]]
@@ -234,7 +224,7 @@ class DevCardCache:
         self.d[dc_type].append(dev_card)
         return
 
-    def remove(self, dev_card: DevCard) -> None:
+    def remove(self, dev_card: DevCard,) -> None:
         """
         Remove dev_card matching some DevCard in the Cache, or raise exception.  For undoing.
         """
@@ -259,12 +249,6 @@ class DevCardCache:
         for typ in self.d.keys():
             total_count += len(self.d[typ])
         return total_count
-
-    def size(self) -> int:
-        """
-        Same as count().
-        """
-        return self.count()
 
     def calc_ppoints(self) -> int:
         """
@@ -349,7 +333,7 @@ class DevCardReserve:
     2
     >>> dev_card_reserve.remove(dc4) #doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ValueError:...
+    Exception:...
     >>> dev_card_reserve.count()
     2
     """
@@ -375,16 +359,13 @@ class DevCardReserve:
             self.s.remove(dev_card)
         except KeyError:
             raise Exception("cannot remove card from DevCardReserve: not found")
+        except Exception as e:
+            raise Exception(f"cannot remove card from DevCardReserve: {e}")
+
         return
 
     def count(self) -> int:
         return len(self.s)
-
-    def size(self) -> int:
-        """
-        Same as count().
-        """
-        return self.count()
 
     def is_max(self) -> bool:
         return len(self.s) >= DEV_CARD_RESERVE_COUNT_MAX
@@ -429,19 +410,23 @@ class DevCardDeck:
     >>> dc1 = DevCard(level=1, t=DevCardType("black"), ppoints=0, cost={"blue": 3})
     >>> dc2 = DevCard(level=1, t=DevCardType("blue"), ppoints=1, cost={"white": 1, "red": 1, "green": 3})
     >>> dc3 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
-    >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=4, cost={"white": 1, "red": 1, "green": 3})
+    >>> dc4 = DevCard(level=1, t=DevCardType("red"), ppoints=3, cost={"white": 1, "red": 1, "green": 3})
     >>> dc5 = DevCard(level=1, t=DevCardType("red"), ppoints=0, cost={"red": 1, "green": 3})
     >>> dc6 = DevCard(level=1, t=DevCardType("white"), ppoints=0, cost={"white": 1, "green": 3})
-
-    >>> dev_card_deck = DevCardDeck(1, [dc0, dc1, dc2, dc3, dc4, dc5, dc6])
+    >>> dev_cards_list = [dc0, dc1, dc2, dc3, dc4, dc5, dc6]
+    >>> dev_card_deck = DevCardDeck(1, dev_cards_list.copy())
     >>> dev_card_deck.get_level()
     1
-    >>> len(dev_card_deck.get_list())
-    7
+    >>> dev_card_deck.get_list() == dev_cards_list
+    True
     >>> dev_card_deck.count()
     7
     >>> dev_card_deck.get_facing() == [dc0, dc1, dc2, dc3]
     True
+    >>> dev_card_deck.count_facing()
+    4
+    >>> dev_card_deck.count_hidden()
+    3
     >>> dev_card_deck.is_empty()
     False
     >>> dev_card_deck.is_hidden_empty()
@@ -449,27 +434,49 @@ class DevCardDeck:
 
     >>> dev_card_deck.pop_by_idx(2) == dc2
     True
-    >>> dev_card_deck.count()
-    6
-    >>> dev_card_deck.get_facing() == [dc0, dc1, dc3, dc4]
-    True
-
     >>> dev_card_deck.pop_hidden_card() == dc5
     True
     >>> dev_card_deck.count()
     5
-    >>> dev_card_deck.is_hidden_empty()
-    False
     >>> dev_card_deck.get_facing() == [dc0, dc1, dc3, dc4]
     True
+    >>> dev_card_deck.count_facing()
+    4
+    >>> dev_card_deck.is_hidden_empty()
+    False
+    >>> dev_card_deck.count_hidden()
+    1
 
-    >>> dev_card_deck.pop_hidden_card() == dc6
+    >>> dev_card_deck.pop_by_idx(0) == dc0
     True
+    >>> dev_card_deck.pop_by_idx(0) == dc1
+    True
+    >>> dev_card_deck.count()
+    3
+    >>> dev_card_deck.get_facing() == [dc3, dc4, dc6]
+    True
+    >>> dev_card_deck.count_facing()
+    3
     >>> dev_card_deck.is_hidden_empty()
     True
-    >>> dev_card_deck.is_empty()
-    False
+    >>> dev_card_deck.count_hidden()
+    0
+
+    >>> dev_card_deck = DevCardDeck(1, dev_cards_list.copy())
+    >>> dev_card_deck.shuffle()
+    >>> dev_card_deck.count()
+    7
+
+    >>> dev_card_deck = DevCardDeck(1, dev_cards_list.copy())
+    >>> dev_card_deck.find_card(dc0)
+    0
+    >>> dev_card_deck.find_card(dc4)
+    4
+    >>> dc7 = DevCard(level=2, t=DevCardType("green"), ppoints=2, cost={"white": 4, "green": 3})
+    >>> dev_card_deck.find_card(dc7)
+    -1
     """
+    # TODO: is there a good way to doctest shuffle()?
 
     level: int
     l: list  # indices 0..3 are the face-up cards; 4..n are the face-down, where 4 is the top-most
@@ -487,21 +494,19 @@ class DevCardDeck:
     def get_list(self) -> List[DevCard]:
         return self.l
 
-    def count(self) -> int:
-        return len(self.l)
-        
     def get_facing(self) -> List[DevCard]:
         """
-        Return cards at indices 0..3, which are the facing ones, as a List
+        Return cards at indices 0..3 (if they exist), which are the facing ones, as a List
         """
-        if len(self.l) < UPFACING_CARDS_LEN:
-            raise Exception("not enough cards remain to get facing ones")
-        return self.l[0:UPFACING_CARDS_LEN]
-    
-    def get_count_upfacing(self) -> int:
+        return self.l[0:min(self.count(), UPFACING_CARDS_LEN)]
+
+    def count(self) -> int:
+        return len(self.l)
+            
+    def count_facing(self) -> int:
         return min(self.count(), UPFACING_CARDS_LEN)
     
-    def get_count_hidden(self) -> int:
+    def count_hidden(self) -> int:
         if self.count() <= UPFACING_CARDS_LEN:
             return 0
         return self.count() - UPFACING_CARDS_LEN
@@ -536,20 +541,20 @@ class DevCardDeck:
             raise Exception("not enough cards remain to get hidden one")
         return self.l.pop(UPFACING_CARDS_LEN)
 
-    def is_hidden_empty(self) -> bool:
-        if self.count() < UPFACING_CARDS_LEN + 1:
+    def is_empty(self) -> bool:
+        if self.count() <= 0:
             return True
         return False
 
-    def is_empty(self) -> bool:
-        if self.count() <= 0:
+    def is_hidden_empty(self) -> bool:
+        if self.count() < UPFACING_CARDS_LEN + 1:
             return True
         return False
 
     def __str__(self) -> str:
         ret_str = ""
         ret_str += f"Development cards deck "
-        ret_str += f"level {self.level}, total {self.count()}, hidden {self.get_count_hidden()}"
+        ret_str += f"level {self.level}, total {self.count()}, hidden {self.count_hidden()}"
         ret_str += "\n"
 
         ret_list = []
@@ -560,7 +565,7 @@ class DevCardDeck:
         return ret_str
 
     def __repr__(self) -> str:
-        return f"<DevCardDeck: level {self.level}, total {self.count()}, hidden {self.get_count_hidden()}>"
+        return f"<DevCardDeck: level {self.level}, total {self.count()}, hidden {self.count_hidden()}>"
 
 
 class Noble:
@@ -572,6 +577,18 @@ class Noble:
     3
     >>> noble.get_cost() == {'black': 4, 'white': 4}
     True
+    >>> noble.get_image() == None
+    True
+
+    >>> noble_2 = Noble(3, {'black': 4, 'white': 4})
+    >>> noble == noble_2
+    True
+    >>> noble_3 = Noble(4, {'black': 4, 'white': 4})
+    >>> noble == noble_3
+    False
+    >>> noble_4 = Noble(3, {'black': 3, 'white': 3, 'red': 3})
+    >>> noble == noble_4
+    False
     """
 
     ppoints: int
@@ -589,11 +606,21 @@ class Noble:
     def get_cost(self) -> Dict[DevCardType, int]:
         return self.cost
 
-    #def get_cost_str(self) -> str:
-    #    return self.cost.__str__()
+    def get_image(self) -> bytes:
+        return self.image
+
+    def __eq__(self, other) -> bool:
+        return (
+                self.ppoints == other.ppoints
+                and self.cost == other.cost
+                and self.image == other.image
+                )
+
+    def __hash__(self) -> int:
+        return hash((self.ppoints, frozenset(self.cost.items()), self.image))
 
     def __str__(self) -> str:
-        return f"p{self.ppoints}/{self.cost.__str__()}"
+        return f"Noble: {self.ppoints} ppoints, cost = {self.cost.__str__()}"
         
     def __repr__(self) -> str:
         return f"<Noble: points {self.ppoints}, cost {self.cost.__repr__()}>"
@@ -603,26 +630,57 @@ class NoblesInPlay:
     """ 
     The set of face-up Nobles.
 
-    >>> n1 = Noble(3, {'black': 4, 'white': 4})
-    >>> n2 = Noble(3, {'black': 3, 'white': 3, 'blue': 3})
-    >>> n3 = Noble(3, {'black': 4, 'green': 4})
-    >>> nobles_in_play = NoblesInPlay(set((n1, n2, n3)))
+    >>> n0 = Noble(3, {'black': 4, 'white': 4})
+    >>> n1 = Noble(3, {'black': 3, 'white': 3, 'blue': 3})
+    >>> n2 = Noble(3, {'black': 4, 'green': 4})
+    >>> nobles_in_play = NoblesInPlay([n0, n1, n2])
     >>> nobles_in_play.count()
     3
+
+    >>> nobles_in_play.find(n1)
+    1
+    >>> nobles_in_play.pop_by_idx(1) == n1
+    True
+    >>> nobles_in_play.count()
+    2
+    >>> nobles_in_play.find(n1)
+    -1
+
+    >>> n3 = Noble(3, {'black': 4, 'red': 4})
+    >>> nobles_in_play.find(n3)
+    -1
     """
 
-    s: Set[Noble]
+    l: List[Noble] # this can be a set, but well make it a list for ease of mutablilty.
 
-    def __init__(self, s: Set[Noble] = set()) -> None:
-        self.s = s
+    def __init__(self, l: List[Noble] = list()) -> None:
+        self.l = l
 
     def count(self) -> int:
-        return len(self.s)
+        return len(self.l)
+
+    def find(self, noble_seeking: Noble) -> int:
+        """
+        Find noble_seeking within this list; return its index or -1 if not found.
+        """
+        for idx in range(self.count()): 
+            if self.l[idx] == noble_seeking:
+                return idx
+        return -1
+
+    def pop_by_idx(self, idx: int) -> Noble:
+        """
+        Remove Noble at index idx and return it, or raise exc if oob
+        """
+        try:
+            return self.l.pop(idx)
+        except IndexError:
+            raise
 
     def __str__(self) -> str:
         retstr = ""
         retstr += f"Nobles in play ({self.count()}):\n"
-        for noble in self.s:
+        for noble in self.l:
             retstr += noble.__str__() + "\n"
         return retstr
     
@@ -652,14 +710,23 @@ class TokenType(GemType):
         return f"<TokenType: {self.desc}>"
 
 
-
 class Token:
     """
     A token.
 
     >>> token = Token("black")
-    >>> token.__str__()
+    >>> token.get_type()
     'black'
+    >>> token.get_image() == None
+    True
+    >>> token.is_joker()
+    False
+
+    >>> token = Token("yellow")
+    >>> token.get_type()
+    'yellow'
+    >>> token.is_joker()
+    True
     """
 
     tt: TokenType
@@ -677,9 +744,11 @@ class Token:
     
     def get_type(self) -> str:
         return self.tt.get_desc()
-    
-    def get_type_str(self) -> str:
-        return self.get_type()
+    #def get_type_str(self) -> str:
+    #    return self.get_type()
+
+    def get_image(self) -> bytes:
+        return self.image
 
     def is_joker(self) -> bool:
         return self.tt.is_joker()
@@ -771,12 +840,6 @@ class TokenCache:
             count += self.d[key]
         return count
 
-    def size(self) -> int:
-        """
-        Same as count().
-        """
-        return self.count()
-
     def count_type(self, token_type_str: str) -> int:
         token_type = TokenType(token_type_str)
         count = self.d.get(token_type)
@@ -839,21 +902,23 @@ class PlayerTokenCache(TokenCache):
     False
     >>> player_token_cache.is_over_max()
     False
+    >>> player_token_cache.count_until_max()
+    1
 
     >>> player_token_cache.add(Token("red"))
-    >>> player_token_cache.count() == PLAYER_TOKEN_CACHE_MAX
-    True
     >>> player_token_cache.is_max()
     True
     >>> player_token_cache.is_over_max()
     False
+    >>> player_token_cache.count_until_max()
+    0
     >>> player_token_cache.add(Token("red"))
-    >>> player_token_cache.count() == PLAYER_TOKEN_CACHE_MAX + 1
-    True
     >>> player_token_cache.is_max()
     False
     >>> player_token_cache.is_over_max()
     True
+    >>> player_token_cache.count_until_max()
+    0
 
     >>> player_token_cache.remove("red")
     >>> player_token_cache.count()
@@ -865,6 +930,8 @@ class PlayerTokenCache(TokenCache):
     Exception:...
     >>> player_token_cache.count()
     10
+    >>> player_token_cache.count_until_max()
+    0
     """
 
     def is_max(self) -> bool:
@@ -881,7 +948,7 @@ class PlayerTokenCache(TokenCache):
         """
         Return the number of token "space" within this cache.
         """
-        return PLAYER_TOKEN_CACHE_MAX - self.count()
+        return max(PLAYER_TOKEN_CACHE_MAX - self.count(), 0)
 
     def can_purchase_dev_card(self, dev_card) -> bool:
         """
